@@ -7,7 +7,7 @@
 # NEVER commit your profiles.yml with real credentials.
 # Add profiles.yml to your .gitignore.
 #
-# portfolIQ API documentation: https://portfoliq.io/docs/dbt-package
+# portfolIQ API documentation: https://portfoliq.io/docs/bi-package
 
 portfoliq:
   target: dev

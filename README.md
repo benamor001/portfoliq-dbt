@@ -231,8 +231,8 @@ vars:
 | Cube.dev | Native dbt project integration |
 
 Full setup guides at:
-- [portfoliq.io/docs/dbt-package](https://portfoliq.io/docs/dbt-package)
-- [portfoliq.io/docs/dbt-package/from-rest-to-bi](https://portfoliq.io/docs/dbt-package/from-rest-to-bi)
+- [portfoliq.io/docs/bi-package](https://portfoliq.io/docs/bi-package)
+- [portfoliq.io/docs/bi-package/from-rest-to-bi](https://portfoliq.io/docs/bi-package/from-rest-to-bi)
 
 ---
 
@@ -292,7 +292,7 @@ features. Internal use and derived analytics are permitted.
 
 ## Need help?
 
-- Docs: [portfoliq.io/docs/dbt-package](https://portfoliq.io/docs/dbt-package)
+- Docs: [portfoliq.io/docs/bi-package](https://portfoliq.io/docs/bi-package)
 - SQL access guide: [portfoliq.io/docs/get-started/sql-access](https://portfoliq.io/docs/get-started/sql-access)
 - API reference: [api.portfoliq.io/docs](https://api.portfoliq.io/docs)
 - Status page: [status.portfoliq.io](https://status.portfoliq.io)
