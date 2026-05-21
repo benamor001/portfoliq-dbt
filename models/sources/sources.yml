@@ -1,0 +1,262 @@
+version: 2
+
+# =============================================================================
+# sources.yml — portfoliq dbt pack
+# Source: PostgreSQL schema star_public (Sprint 20 portfolIQ pipeline)
+# All tables are read-only pass-through. Never write to this schema.
+#
+# Legal: Not financial advice. Methodology disclosed.
+# Licence: ELv2 — see NOTICE.md
+# =============================================================================
+
+sources:
+  - name: portfoliq
+    description: >
+      portfolIQ public Star Schema — schema star_public on the portfolIQ PostgreSQL
+      instance. Contains dimensions, facts and public satellites materialized by the
+      portfolIQ internal dbt pipeline. Read-only access for pack consumers.
+      Not financial advice. Methodology disclosed.
+    database: "{{ var('portfoliq_database', '') or target.database }}"
+    schema: star_public
+
+    # ── Dimensions ────────────────────────────────────────────────────────────
+    tables:
+      - name: dim_asset
+        description: >
+          Star Schema dimension SCD2 — publicly exposable asset attributes.
+          One row per version of an asset (grain: asset_hk, valid_from).
+          Business key: asset_id (stable integer, portfolIQ internal BK).
+          coingecko_id is NEVER exposed (CoinGecko ToS §6.2).
+        columns:
+          - name: asset_sk
+            description: "Surrogate PK — dbt_utils.generate_surrogate_key(['asset_hk', 'valid_from'])."
+          - name: asset_id
+            description: "Stable integer business key (public, portfolIQ-assigned, never changes)."
+          - name: ticker
+            description: "Asset trading ticker symbol (e.g. BTC, ETH)."
+          - name: name
+            description: "Full asset name (e.g. Bitcoin)."
+          - name: tier
+            description: "Market cap rank tier: 1=Top50, 2=Top200, 3=Top1000."
+          - name: contract_address
+            description: "Primary on-chain contract address (NULL for native coins)."
+          - name: sources_confirmed
+            description: "Array of source identifiers confirming this record."
+          - name: single_source
+            description: "True when only one source confirmed this asset record."
+          - name: methodology_version
+            description: "Methodology version string for audit trail."
+          - name: valid_from
+            description: "SCD2 validity start (UTC). Equals satellite load_ts."
+          - name: valid_to
+            description: "SCD2 validity end (UTC). NULL = current active record."
+          - name: is_current
+            description: "True if this is the current active SCD2 version."
+
+      - name: dim_news_source
+        description: >
+          Star Schema dimension SCD1 — editorial news source reference table.
+          One row per distinct news editor found in sat_asset_news_public.
+          Grain: news_source_id (hash of normalized editor name).
+        columns:
+          - name: news_source_sk
+            description: "Surrogate PK."
+          - name: news_source_id
+            description: "Business key — SHA-256 hash of lower(trim(editor))."
+          - name: editor
+            description: "Raw editorial source name."
+          - name: editor_normalized
+            description: "Lowercased, trimmed editor name."
+          - name: first_seen_at
+            description: "Earliest published_at from this editor."
+          - name: last_seen_at
+            description: "Most recent published_at from this editor."
+          - name: article_count
+            description: "Total article count from this editor."
+          - name: load_ts
+            description: "UTC timestamp of last computation."
+
+      - name: dim_date
+        description: >
+          Star Schema date dimension. One row per calendar date.
+          Range: 2009-01-03 (Bitcoin genesis) to CURRENT_DATE + 1 year.
+          PK: date_key (YYYYMMDD integer). is_us_market_holiday is a static approximation.
+        columns:
+          - name: date_key
+            description: "PK — YYYYMMDD integer (e.g. 20240115)."
+          - name: date
+            description: "Calendar date (PostgreSQL date type)."
+          - name: year
+            description: "Calendar year."
+          - name: quarter
+            description: "Calendar quarter (1-4)."
+          - name: month
+            description: "Month number (1-12)."
+          - name: month_name
+            description: "Month name (padded — trim before display)."
+          - name: week_of_year
+            description: "ISO week number (1-53)."
+          - name: day_of_week
+            description: "ISO day of week: 1=Monday, 7=Sunday."
+          - name: day_name
+            description: "Day name (padded — trim before display)."
+          - name: day_of_month
+            description: "Day of month (1-31)."
+          - name: day_of_year
+            description: "Day of year (1-366)."
+          - name: is_weekend
+            description: "True if Saturday or Sunday."
+          - name: is_us_market_holiday
+            description: "True if NYSE market holiday (static 2009-2030 approximation)."
+          - name: fiscal_year
+            description: "Fiscal year (calendar-aligned in v1)."
+          - name: fiscal_quarter
+            description: "Fiscal quarter (calendar-aligned in v1)."
+
+      - name: dim_chain
+        description: >
+          Static dimension — blockchain / network reference table (~30 chains).
+          is_l2=true implies parent_chain_id IS NOT NULL.
+        columns:
+          - name: chain_id
+            description: "Stable slug PK (e.g. 'ethereum', 'arbitrum')."
+          - name: chain_name
+            description: "Human-readable chain name."
+          - name: native_symbol
+            description: "Native gas token ticker."
+          - name: is_evm
+            description: "True if EVM-compatible."
+          - name: is_l2
+            description: "True if Layer 2."
+          - name: parent_chain_id
+            description: "FK to chain_id of parent L1. NULL for standalone L1."
+
+      - name: dim_event_type
+        description: >
+          Static dimension — crypto event type reference table (18 event types).
+          affects_price_typically is indicative, not financial advice.
+        columns:
+          - name: event_type_id
+            description: "Stable slug PK (e.g. 'halving', 'hard_fork')."
+          - name: event_type_label
+            description: "Human-readable label."
+          - name: description
+            description: "Brief description of the event type."
+          - name: affects_price_typically
+            description: "Indicative boolean — historical price correlation. NOT investment advice."
+
+      - name: dim_analysis_type
+        description: >
+          Static dimension — AI analysis type reference table (11 rows).
+          Aligned with portfolIQ prompts/registry.yml.
+          is_enabled=false for halal_screening and reserved_* types.
+        columns:
+          - name: analysis_type_id
+            description: "Stable slug PK aligned with prompts/registry.yml."
+          - name: analysis_type_label
+            description: "Human-readable label."
+          - name: model_default
+            description: "Default Claude model. NULL when is_enabled=false."
+          - name: refresh_cadence
+            description: "Refresh trigger cadence. NULL when is_enabled=false."
+          - name: is_enabled
+            description: "True if this analysis type is active in production."
+
+      - name: dim_tier
+        description: >
+          Static dimension — crypto asset tier reference table (3 tiers).
+          Tier boundary is market_cap_rank — NOT a fixed USD threshold.
+        columns:
+          - name: tier
+            description: "Tier integer PK: 1=Top50, 2=Top200, 3=Top1000."
+          - name: tier_label
+            description: "Human-readable label."
+          - name: min_rank
+            description: "Minimum market cap rank (inclusive)."
+          - name: max_rank
+            description: "Maximum market cap rank (inclusive)."
+          - name: min_market_cap_usd_approx
+            description: "Approximate minimum market cap USD. Indicative only."
+
+    # ── Facts ─────────────────────────────────────────────────────────────────
+      - name: fact_market_snapshot
+        description: >
+          Star Schema fact view — derived market snapshot per asset per day.
+          Grain: (asset_sk, snapshot_date). price_consensus_usd = multi-exchange VWAP.
+          DISCLAIMER: Not financial advice. Methodology disclosed.
+
+      - name: fact_vwap_consensus
+        description: >
+          Star Schema fact view — multi-exchange VWAP consensus prices.
+          Grain: (asset_sk, snapshot_ts, timeframe). Derived data, redistributable.
+          DISCLAIMER: Not financial advice. Methodology disclosed.
+
+      - name: fact_onchain_core
+        description: >
+          Star Schema fact view — on-chain core metrics (BTC+ETH in v1).
+          Grain: (asset_sk, snapshot_date). Factual public RPC aggregates.
+          DISCLAIMER: Not financial advice. Factual on-chain aggregates. Methodology disclosed.
+
+      - name: fact_onchain_advanced
+        description: >
+          Star Schema fact view — advanced on-chain metrics (BTC-only in v1).
+          Grain: (asset_sk, snapshot_date). Source: BigQuery public data (MIT).
+          DISCLAIMER: Not financial advice. Factual descriptive metrics. Methodology disclosed.
+
+      - name: fact_asset_fundamentals
+        description: >
+          Star Schema fact view — P/S and P/R valuation ratios for DeFi assets.
+          Grain: (asset_sk, snapshot_date). Source: DeFiLlama (MIT licence).
+          DISCLAIMER: Factual valuation metrics only. Not financial advice.
+
+      - name: fact_protocol_tvl
+        description: >
+          Star Schema fact view — portfolIQ self-calculated TVL per DeFi protocol.
+          Grain: (protocol_id, snapshot_date). tvl_usd = on-chain pool balances VWAP-priced.
+          DISCLAIMER: Not financial advice. TVL self-calculated. Methodology disclosed.
+
+      - name: fact_protocol_economics
+        description: >
+          Star Schema fact view — DeFi protocol fees and revenue metrics.
+          Grain: (protocol_id, snapshot_date). Source: DeFiLlama (MIT licence).
+          DISCLAIMER: Factual on-chain derived metrics. Not financial advice.
+
+      - name: fact_news_mention
+        description: >
+          Star Schema incremental fact — news article x asset mention pairs.
+          Grain: (article_hk, asset_sk). tokens_mentioned UNNESTed.
+          DISCLAIMER: Not financial advice. Not a fatwa. Methodology disclosed.
+
+      - name: fact_ai_analysis
+        description: >
+          Star Schema incremental fact — AI-generated analyses per asset per type per day.
+          Grain: (asset_sk, analysis_type_id, generated_date).
+          Content generated by Claude Haiku 4.5 (85%) / Sonnet 4.6 (15%).
+          DISCLAIMER: Not financial advice. Methodology disclosed. AI-generated content.
+
+      - name: fact_event
+        description: >
+          Star Schema incremental fact — crypto asset events.
+          Grain: (event_hk, asset_sk). Asset-linked events only.
+          DISCLAIMER: Not financial advice. Factual event data. Methodology disclosed.
+
+    # ── Public Satellites ─────────────────────────────────────────────────────
+      - name: sat_asset_metadata_public
+        description: >
+          Public satellite — asset metadata (R1 multi-source). Exposure: public_recomputed.
+          Source: Sprint 16A T-219.
+
+      - name: sat_asset_news_public
+        description: >
+          Public satellite — news filtered (R4, no title/excerpt). Exposure: public_recomputed.
+          Source: Sprint 16A T-222.
+
+      - name: sat_asset_market_derived
+        description: >
+          Public satellite — market cap = VWAP x on-chain supply (R2). Exposure: public_recomputed.
+          Source: Sprint 16B T-227.
+
+      - name: sat_protocol_tvl_self
+        description: >
+          Public satellite — TVL self-calculated from on-chain pool balances (R3).
+          Exposure: public_recomputed. Source: Sprint 16B T-226.
