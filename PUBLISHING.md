@@ -39,6 +39,34 @@ git remote -v
 
 ---
 
+## Pre-publish anti-leak verification
+
+Run the automated check before any publish:
+
+```bash
+make pre-publish-check
+```
+
+This verifies the following conditions (all must pass):
+
+- `dbt-package/dbt_packages/` is absent — third-party packages must not be bundled
+  (verify `.gitignore` excludes `dbt_packages/`).
+- `dbt-package/target/` is absent — compiled artifacts must not be pushed.
+- `dbt-package/profiles.yml` (without `.example` suffix) is absent — no credentials
+  in clear text; only `profiles.yml.example` is allowed.
+- `dbt-package/.env` is absent — no environment secrets.
+- `dbt-package/logs/` is absent — no dbt run logs.
+- No `*.csv` files outside `dbt-package/seeds/` — the only CSVs allowed are the
+  four reference seeds (`dim_chain`, `dim_event_type`, `dim_analysis_type`,
+  `dim_tier`), which are code-only reference data, not third-party market data.
+- `grep -rE '(password|secret|token|api_key|0x[a-fA-F0-9]{40})' dbt-package/`
+  returns zero results (excluding known documentation placeholders such as
+  `sql_user_xxxxxxxx`, `<from`, `example.com`).
+- All SQL files in `examples/queries/` use only CTEs/snippets with no credentials
+  embedded.
+
+---
+
 ## Step 3 — First publish
 
 ```bash
