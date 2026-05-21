@@ -1,0 +1,12 @@
+portfoliq:
+  target: dev
+  outputs:
+    dev:
+      type: postgres
+      host: localhost
+      port: 5434
+      user: finance_user
+      password: testpassword123
+      dbname: finance_data
+      schema: star_public
+      threads: 4

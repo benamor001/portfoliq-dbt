@@ -31,7 +31,8 @@ models:
         public_doc: true
     tests:
       - dbt_utils.unique_combination_of_columns:
-          combination_of_columns: [asset_hk, valid_from]
+          arguments:
+            combination_of_columns: [asset_hk, valid_from]
     columns:
       - name: asset_sk
         description: >
@@ -234,172 +235,9 @@ models:
       - name: fiscal_quarter
         description: "Fiscal quarter (calendar-aligned in v1 — identical to quarter)."
 
-  - name: dim_chain
-    description: >
-      Static dimension — blockchain / network reference table (~30 chains).
-      Includes major L1s (Bitcoin, Ethereum, Solana...) and Ethereum L2s.
-      is_l2=true always implies parent_chain_id IS NOT NULL.
-      Not financial advice. Methodology disclosed.
-      Ref: COMITE-010, Sprint 17 T-233.
-    config:
-      meta:
-        exposure: public
-        public_doc: true
-    columns:
-      - name: chain_id
-        description: >
-          Stable slug identifier (e.g. 'ethereum', 'arbitrum', 'bitcoin'). Primary key.
-          Never changes once allocated — referenced in sat_protocol_tvl_self and on-chain joins.
-        tests:
-          - unique
-          - not_null
-
-      - name: chain_name
-        description: "Human-readable chain name (e.g. 'Ethereum', 'Arbitrum One', 'Bitcoin')."
-        tests:
-          - not_null
-
-      - name: native_symbol
-        description: "Native gas token ticker (e.g. 'ETH', 'BNB', 'BTC', 'MATIC')."
-        tests:
-          - not_null
-
-      - name: is_evm
-        description: >
-          True if the chain runs the Ethereum Virtual Machine (EVM-compatible).
-          False for Bitcoin, Solana, Starknet (Cairo VM), NEAR, etc.
-        tests:
-          - not_null
-
-      - name: is_l2
-        description: >
-          True if the chain is a Layer 2 network built on top of a parent L1.
-          If is_l2=true, parent_chain_id MUST NOT be NULL.
-        tests:
-          - not_null
-
-      - name: parent_chain_id
-        description: >
-          FK to chain_id of the parent L1. NULL for standalone L1 chains.
-          Example: arbitrum.parent_chain_id = 'ethereum'.
-
-  - name: dim_event_type
-    description: >
-      Static dimension — crypto event type reference table (18 event types).
-      Covers halvings, forks, listings, governance votes, security incidents, etc.
-      affects_price_typically is indicative only — NOT investment advice.
-      Not financial advice. Methodology disclosed.
-      Ref: COMITE-010, Sprint 17 T-233.
-    config:
-      meta:
-        exposure: public
-        public_doc: true
-    columns:
-      - name: event_type_id
-        description: >
-          Stable slug identifier (e.g. 'halving', 'hard_fork', 'exchange_listing').
-          Primary key — referenced by fact_event.event_type_id.
-        tests:
-          - unique
-          - not_null
-
-      - name: event_type_label
-        description: "Human-readable label (e.g. 'Halving', 'Exchange Listing')."
-        tests:
-          - not_null
-
-      - name: description
-        description: "Brief description of the event type and its typical significance."
-
-      - name: affects_price_typically
-        description: >
-          Indicative boolean — true if this event type historically correlates
-          with significant price movements. General market observation only.
-          NOT investment advice. Not financial advice.
-        tests:
-          - not_null
-
-  - name: dim_analysis_type
-    description: >
-      Static dimension — AI analysis type reference table (11 rows).
-      Aligned with portfolIQ prompts/registry.yml. is_enabled=false for
-      halal_screening (not in scope v1) and reserved_* placeholders.
-      Not financial advice. Methodology disclosed.
-      Ref: COMITE-010, Sprint 17 T-233.
-    config:
-      meta:
-        exposure: public
-        public_doc: true
-    columns:
-      - name: analysis_type_id
-        description: >
-          Stable slug identifier aligned with portfolIQ prompts/registry.yml
-          (e.g. 'token_classification', 'news_summary', 'sentiment_score').
-          Primary key — referenced by fact_ai_analysis.analysis_type_id.
-        tests:
-          - unique
-          - not_null
-
-      - name: analysis_type_label
-        description: "Human-readable label (e.g. 'Token Classification', 'News Summary')."
-        tests:
-          - not_null
-
-      - name: model_default
-        description: >
-          Default Claude model for this analysis type (e.g. 'claude-haiku-4-5').
-          NULL when is_enabled=false.
-
-      - name: refresh_cadence
-        description: >
-          Refresh trigger cadence (e.g. 'quarterly_or_event', 'trigger_new_news').
-          NULL when is_enabled=false.
-
-      - name: is_enabled
-        description: >
-          True if this analysis type is active in the portfolIQ AI pipeline.
-          False for halal_screening and reserved_* placeholders.
-        tests:
-          - not_null
-
-  - name: dim_tier
-    description: >
-      Static dimension — crypto asset market cap tier reference table (3 rows).
-      Tier 1=Top50, 2=Top51-200, 3=Top201-1000.
-      Tier boundary is market_cap_rank — NOT a fixed USD threshold.
-      min_market_cap_usd_approx is indicative and manually updated.
-      Not financial advice. Methodology disclosed.
-      Ref: COMITE-010, Sprint 17 T-233.
-    config:
-      meta:
-        exposure: public
-        public_doc: true
-    columns:
-      - name: tier
-        description: "Tier integer primary key: 1=Top50, 2=Top51-200, 3=Top201-1000."
-        tests:
-          - unique
-          - not_null
-
-      - name: tier_label
-        description: "Human-readable label (e.g. 'Tier 1 (Top 50)', 'Tier 2 (Top 200)')."
-        tests:
-          - not_null
-
-      - name: min_rank
-        description: "Minimum market cap rank (inclusive) for this tier."
-        tests:
-          - not_null
-
-      - name: max_rank
-        description: "Maximum market cap rank (inclusive) for this tier."
-        tests:
-          - not_null
-
-      - name: min_market_cap_usd_approx
-        description: >
-          Approximate minimum market cap in USD for this tier.
-          Indicative only — manually updated. NOT a contractual threshold.
+# ── dim_chain, dim_event_type, dim_analysis_type, dim_tier are SEEDS ──────────
+# Their documentation and tests live in seeds/schema.yml.
+# Listed here only as reference for relationship tests in fact models.
 
 # ──────────────────────────────────────────────────────────────────────────────
 # FACTS (10)
@@ -419,7 +257,8 @@ models:
         disclaimer: "Not financial advice. Methodology disclosed."
     tests:
       - dbt_utils.unique_combination_of_columns:
-          combination_of_columns: [asset_sk, snapshot_date]
+          arguments:
+            combination_of_columns: [asset_sk, snapshot_date]
     columns:
       - name: asset_sk
         description: "Surrogate FK to dim_asset.asset_sk (current SCD2 version). NOT NULL."
@@ -502,7 +341,8 @@ models:
         disclaimer: "Not financial advice. Methodology disclosed."
     tests:
       - dbt_utils.unique_combination_of_columns:
-          combination_of_columns: [asset_sk, snapshot_ts, timeframe]
+          arguments:
+            combination_of_columns: [asset_sk, snapshot_ts, timeframe]
     columns:
       - name: asset_sk
         description: "Surrogate FK to dim_asset.asset_sk."
@@ -575,7 +415,8 @@ models:
         disclaimer: "Not financial advice. Factual on-chain aggregates. Methodology disclosed."
     tests:
       - dbt_utils.unique_combination_of_columns:
-          combination_of_columns: [asset_sk, snapshot_date]
+          arguments:
+            combination_of_columns: [asset_sk, snapshot_date]
     columns:
       - name: asset_sk
         description: "Surrogate FK to dim_asset.asset_sk."
@@ -632,7 +473,8 @@ models:
         disclaimer: "Not financial advice. Factual descriptive metrics. Methodology disclosed."
     tests:
       - dbt_utils.unique_combination_of_columns:
-          combination_of_columns: [asset_sk, snapshot_date]
+          arguments:
+            combination_of_columns: [asset_sk, snapshot_date]
     columns:
       - name: asset_sk
         description: "Surrogate FK to dim_asset.asset_sk."
@@ -705,7 +547,8 @@ models:
         disclaimer: "Factual valuation metrics only. Not financial advice. Not a fatwa. Methodology disclosed."
     tests:
       - dbt_utils.unique_combination_of_columns:
-          combination_of_columns: [asset_sk, snapshot_date]
+          arguments:
+            combination_of_columns: [asset_sk, snapshot_date]
     columns:
       - name: asset_sk
         description: "Surrogate FK to dim_asset.asset_sk."
@@ -777,7 +620,8 @@ models:
         disclaimer: "TVL self-calculated from on-chain pool balances. Not financial advice. Methodology disclosed."
     tests:
       - dbt_utils.unique_combination_of_columns:
-          combination_of_columns: [protocol_id, snapshot_date]
+          arguments:
+            combination_of_columns: [protocol_id, snapshot_date]
     columns:
       - name: protocol_id
         description: >
@@ -829,7 +673,8 @@ models:
         disclaimer: "Factual on-chain derived metrics. Not financial advice. Methodology disclosed."
     tests:
       - dbt_utils.unique_combination_of_columns:
-          combination_of_columns: [protocol_id, snapshot_date]
+          arguments:
+            combination_of_columns: [protocol_id, snapshot_date]
     columns:
       - name: protocol_id
         description: "DeFiLlama slug BK (e.g. 'uniswap', 'aave'). No surrogate key in v1."
@@ -881,7 +726,8 @@ models:
         disclaimer: "Not financial advice. Not a fatwa. Methodology disclosed."
     tests:
       - dbt_utils.unique_combination_of_columns:
-          combination_of_columns: [article_hk, asset_sk]
+          arguments:
+            combination_of_columns: [article_hk, asset_sk]
     columns:
       - name: news_mention_sk
         description: "Surrogate key on (article_hk, asset_sk). Unique, not null."
@@ -940,7 +786,8 @@ models:
         disclaimer: "Not financial advice. Methodology disclosed. AI-generated content."
     tests:
       - dbt_utils.unique_combination_of_columns:
-          combination_of_columns: [asset_sk, analysis_type_id, generated_date]
+          arguments:
+            combination_of_columns: [asset_sk, analysis_type_id, generated_date]
     columns:
       - name: ai_analysis_sk
         description: "Surrogate key on (asset_sk, analysis_type_id, generated_date::text). NOT NULL."
@@ -1013,7 +860,8 @@ models:
         disclaimer: "Not financial advice. Factual event data. Methodology disclosed."
     tests:
       - dbt_utils.unique_combination_of_columns:
-          combination_of_columns: [event_hk, asset_sk]
+          arguments:
+            combination_of_columns: [event_hk, asset_sk]
     columns:
       - name: event_fact_sk
         description: "Surrogate key on (event_hk, asset_sk). Unique, not null."

@@ -113,70 +113,10 @@ sources:
           - name: fiscal_quarter
             description: "Fiscal quarter (calendar-aligned in v1)."
 
-      - name: dim_chain
-        description: >
-          Static dimension — blockchain / network reference table (~30 chains).
-          is_l2=true implies parent_chain_id IS NOT NULL.
-        columns:
-          - name: chain_id
-            description: "Stable slug PK (e.g. 'ethereum', 'arbitrum')."
-          - name: chain_name
-            description: "Human-readable chain name."
-          - name: native_symbol
-            description: "Native gas token ticker."
-          - name: is_evm
-            description: "True if EVM-compatible."
-          - name: is_l2
-            description: "True if Layer 2."
-          - name: parent_chain_id
-            description: "FK to chain_id of parent L1. NULL for standalone L1."
-
-      - name: dim_event_type
-        description: >
-          Static dimension — crypto event type reference table (18 event types).
-          affects_price_typically is indicative, not financial advice.
-        columns:
-          - name: event_type_id
-            description: "Stable slug PK (e.g. 'halving', 'hard_fork')."
-          - name: event_type_label
-            description: "Human-readable label."
-          - name: description
-            description: "Brief description of the event type."
-          - name: affects_price_typically
-            description: "Indicative boolean — historical price correlation. NOT investment advice."
-
-      - name: dim_analysis_type
-        description: >
-          Static dimension — AI analysis type reference table (11 rows).
-          Aligned with portfolIQ prompts/registry.yml.
-          is_enabled=false for halal_screening and reserved_* types.
-        columns:
-          - name: analysis_type_id
-            description: "Stable slug PK aligned with prompts/registry.yml."
-          - name: analysis_type_label
-            description: "Human-readable label."
-          - name: model_default
-            description: "Default Claude model. NULL when is_enabled=false."
-          - name: refresh_cadence
-            description: "Refresh trigger cadence. NULL when is_enabled=false."
-          - name: is_enabled
-            description: "True if this analysis type is active in production."
-
-      - name: dim_tier
-        description: >
-          Static dimension — crypto asset tier reference table (3 tiers).
-          Tier boundary is market_cap_rank — NOT a fixed USD threshold.
-        columns:
-          - name: tier
-            description: "Tier integer PK: 1=Top50, 2=Top200, 3=Top1000."
-          - name: tier_label
-            description: "Human-readable label."
-          - name: min_rank
-            description: "Minimum market cap rank (inclusive)."
-          - name: max_rank
-            description: "Maximum market cap rank (inclusive)."
-          - name: min_market_cap_usd_approx
-            description: "Approximate minimum market cap USD. Indicative only."
+    # ── dim_chain / dim_event_type / dim_analysis_type / dim_tier are SEEDS ──
+    # These dimensions are bundled as seeds in dbt-package/seeds/.
+    # They are NOT source tables — consumers use ref() directly on the seeds.
+    # Listed here only as documentation reference, not as dbt source declarations.
 
     # ── Facts ─────────────────────────────────────────────────────────────────
       - name: fact_market_snapshot
