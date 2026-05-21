@@ -1,0 +1,1127 @@
+version: 2
+
+# =============================================================================
+# schema.yml — portfoliq dbt pack
+# Consolidated documentation for all 21 public models.
+# 7 dimensions + 10 facts + 4 satellites = 21 models.
+#
+# Tags:
+#   public_doc: true  — documented in portfolIQ public developer docs
+#   public_doc: false — available but not promoted in primary docs
+#
+# Legal: Not financial advice. Methodology disclosed.
+# Licence: ELv2 — see NOTICE.md
+# =============================================================================
+
+# ──────────────────────────────────────────────────────────────────────────────
+# DIMENSIONS (7)
+# ──────────────────────────────────────────────────────────────────────────────
+models:
+  - name: dim_asset
+    description: >
+      Star Schema dimension SCD2 — publicly exposable asset attributes.
+      Grain: (asset_hk, valid_from) — one row per SCD2 version of an asset.
+      Business key: asset_id (stable integer, portfolIQ-assigned, never changes).
+      coingecko_id is NEVER exposed (CoinGecko ToS §6.2).
+      Not financial advice. Methodology disclosed.
+      Ref: COMITE-010, Sprint 17 T-230.
+    config:
+      meta:
+        exposure: public
+        public_doc: true
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [asset_hk, valid_from]
+    columns:
+      - name: asset_sk
+        description: >
+          Surrogate primary key (technical).
+          Generated as dbt_utils.generate_surrogate_key(['asset_hk', 'valid_from']).
+          Unique per SCD2 version row. Referenced by all fact tables.
+        tests:
+          - unique
+          - not_null
+
+      - name: asset_id
+        description: >
+          Business key portfolIQ (public, stable integer).
+          Allocated as ROW_NUMBER() OVER (ORDER BY hub_asset.load_ts ASC).
+          Irréversible: once allocated, never changes even if ticker changes (SCD2).
+          This is the public identifier exposed via REST /v1/star/*.
+        tests:
+          - not_null
+
+      - name: ticker
+        description: >
+          Asset trading ticker symbol (e.g. 'BTC', 'ETH'), uppercase.
+          SCD2-tracked: a change in ticker triggers a new row and a new asset_sk.
+        tests:
+          - not_null
+
+      - name: name
+        description: >
+          Full asset name (e.g. 'Bitcoin', 'Ethereum').
+          SCD2-tracked: a change triggers a new row.
+        tests:
+          - not_null
+
+      - name: tier
+        description: >
+          Market cap rank tier. 1=Top50, 2=Top51-200, 3=Top201-1000.
+          NULL if rank unavailable or > 1000.
+          Computed from coingecko_rank_at_load at each SCD2 version boundary.
+
+      - name: contract_address
+        description: >
+          Primary on-chain contract address (nullable for native coins like BTC, ETH).
+          SCD2-tracked: a contract address change triggers a new row.
+
+      - name: sources_confirmed
+        description: >
+          Array of source identifiers confirming this asset record.
+          Example: ['coingecko', 'onchain']. Minimum 1 source always present.
+
+      - name: single_source
+        description: >
+          True when only one data source (CoinGecko) confirmed this record.
+          False when confirmed by 2+ independent sources.
+          Degraded mode indicator — not a quality failure in v1.
+
+      - name: methodology_version
+        description: >
+          Methodology version string for audit trail (MAR compliance).
+          Matches sat_asset_metadata_public.methodology_version.
+
+      - name: valid_from
+        description: >
+          Start of SCD2 validity window for this version (UTC).
+          Equals load_ts of the source satellite record.
+        tests:
+          - not_null
+
+      - name: valid_to
+        description: >
+          End of SCD2 validity window (UTC). NULL = current active record.
+          Non-NULL = superseded version.
+
+      - name: is_current
+        description: >
+          True if this row is the current active SCD2 version (valid_to IS NULL).
+          Exactly one is_current=true row per asset_hk.
+
+  - name: dim_news_source
+    description: >
+      Star Schema dimension SCD1 — editorial news source reference table.
+      Grain: news_source_id — one row per distinct editorial source (editor).
+      SCD1: no history — article_count and timestamps are overwritten on re-run.
+      0 rows is acceptable when sat_asset_news_public is empty (no NER backfill in dev).
+      Not financial advice. Methodology disclosed.
+      Ref: COMITE-010, Sprint 17 T-231.
+    config:
+      meta:
+        exposure: public
+        public_doc: true
+    columns:
+      - name: news_source_sk
+        description: "Surrogate primary key. Generated as dbt_utils.generate_surrogate_key(['news_source_id'])."
+        tests:
+          - unique
+          - not_null
+
+      - name: news_source_id
+        description: >
+          Business key — SHA-256 hash of lower(trim(editor)).
+          Deterministic and stable: same editor name always maps to same ID.
+
+      - name: editor
+        description: "Raw editorial source name as found in sat_asset_news_public (e.g. 'CoinDesk')."
+
+      - name: editor_normalized
+        description: "Lowercased, trimmed editor name (e.g. 'coindesk'). Used for deduplication."
+
+      - name: first_seen_at
+        description: "Earliest published_at timestamp of any article from this editor."
+        tests:
+          - not_null
+
+      - name: last_seen_at
+        description: "Most recent published_at timestamp of any article from this editor."
+
+      - name: article_count
+        description: "Total article count in sat_asset_news_public from this editor. Overwritten on each run (SCD1)."
+
+      - name: load_ts
+        description: "UTC timestamp when this row was last computed (now() at dbt run time)."
+        tests:
+          - not_null
+
+  - name: dim_date
+    description: >
+      Star Schema date dimension. One row per calendar date.
+      Range: 2009-01-03 (Bitcoin genesis) to CURRENT_DATE + 1 year.
+      Incremental: only dates beyond MAX(date) are appended on re-run.
+      is_us_market_holiday is a static approximation (NYSE 2009-2030).
+      Not financial advice. Methodology disclosed.
+      Ref: COMITE-010, Sprint 17 T-232.
+    config:
+      meta:
+        exposure: public
+        public_doc: true
+    columns:
+      - name: date_key
+        description: "Primary key — YYYYMMDD integer (e.g. 20240115). Unique, not null."
+        tests:
+          - unique
+          - not_null
+
+      - name: date
+        description: "Calendar date (PostgreSQL date type)."
+        tests:
+          - unique
+          - not_null
+
+      - name: year
+        description: "Calendar year (e.g. 2024)."
+        tests:
+          - not_null
+
+      - name: quarter
+        description: "Calendar quarter (1-4)."
+        tests:
+          - not_null
+
+      - name: month
+        description: "Month number (1-12)."
+        tests:
+          - not_null
+
+      - name: month_name
+        description: "Month name padded by PostgreSQL to_char (e.g. 'January  '). Trim before display."
+
+      - name: week_of_year
+        description: "ISO week number (1-53)."
+
+      - name: day_of_week
+        description: "ISO day of week: 1=Monday, 7=Sunday."
+        tests:
+          - not_null
+
+      - name: day_name
+        description: "Day name padded by PostgreSQL to_char (e.g. 'Monday   '). Trim before display."
+
+      - name: day_of_month
+        description: "Day of month (1-31)."
+
+      - name: day_of_year
+        description: "Day of year (1-366)."
+
+      - name: is_weekend
+        description: "True if day_of_week IN (6, 7) — Saturday or Sunday."
+        tests:
+          - not_null
+
+      - name: is_us_market_holiday
+        description: >
+          True if the date is a NYSE market holiday (static approximation 2009-2030).
+          Conservative: dates beyond 2030 default to false.
+          This is NOT authoritative — verify with official NYSE calendar for production use.
+        tests:
+          - not_null
+
+      - name: fiscal_year
+        description: "Fiscal year (calendar-aligned in v1 — identical to year)."
+
+      - name: fiscal_quarter
+        description: "Fiscal quarter (calendar-aligned in v1 — identical to quarter)."
+
+  - name: dim_chain
+    description: >
+      Static dimension — blockchain / network reference table (~30 chains).
+      Includes major L1s (Bitcoin, Ethereum, Solana...) and Ethereum L2s.
+      is_l2=true always implies parent_chain_id IS NOT NULL.
+      Not financial advice. Methodology disclosed.
+      Ref: COMITE-010, Sprint 17 T-233.
+    config:
+      meta:
+        exposure: public
+        public_doc: true
+    columns:
+      - name: chain_id
+        description: >
+          Stable slug identifier (e.g. 'ethereum', 'arbitrum', 'bitcoin'). Primary key.
+          Never changes once allocated — referenced in sat_protocol_tvl_self and on-chain joins.
+        tests:
+          - unique
+          - not_null
+
+      - name: chain_name
+        description: "Human-readable chain name (e.g. 'Ethereum', 'Arbitrum One', 'Bitcoin')."
+        tests:
+          - not_null
+
+      - name: native_symbol
+        description: "Native gas token ticker (e.g. 'ETH', 'BNB', 'BTC', 'MATIC')."
+        tests:
+          - not_null
+
+      - name: is_evm
+        description: >
+          True if the chain runs the Ethereum Virtual Machine (EVM-compatible).
+          False for Bitcoin, Solana, Starknet (Cairo VM), NEAR, etc.
+        tests:
+          - not_null
+
+      - name: is_l2
+        description: >
+          True if the chain is a Layer 2 network built on top of a parent L1.
+          If is_l2=true, parent_chain_id MUST NOT be NULL.
+        tests:
+          - not_null
+
+      - name: parent_chain_id
+        description: >
+          FK to chain_id of the parent L1. NULL for standalone L1 chains.
+          Example: arbitrum.parent_chain_id = 'ethereum'.
+
+  - name: dim_event_type
+    description: >
+      Static dimension — crypto event type reference table (18 event types).
+      Covers halvings, forks, listings, governance votes, security incidents, etc.
+      affects_price_typically is indicative only — NOT investment advice.
+      Not financial advice. Methodology disclosed.
+      Ref: COMITE-010, Sprint 17 T-233.
+    config:
+      meta:
+        exposure: public
+        public_doc: true
+    columns:
+      - name: event_type_id
+        description: >
+          Stable slug identifier (e.g. 'halving', 'hard_fork', 'exchange_listing').
+          Primary key — referenced by fact_event.event_type_id.
+        tests:
+          - unique
+          - not_null
+
+      - name: event_type_label
+        description: "Human-readable label (e.g. 'Halving', 'Exchange Listing')."
+        tests:
+          - not_null
+
+      - name: description
+        description: "Brief description of the event type and its typical significance."
+
+      - name: affects_price_typically
+        description: >
+          Indicative boolean — true if this event type historically correlates
+          with significant price movements. General market observation only.
+          NOT investment advice. Not financial advice.
+        tests:
+          - not_null
+
+  - name: dim_analysis_type
+    description: >
+      Static dimension — AI analysis type reference table (11 rows).
+      Aligned with portfolIQ prompts/registry.yml. is_enabled=false for
+      halal_screening (not in scope v1) and reserved_* placeholders.
+      Not financial advice. Methodology disclosed.
+      Ref: COMITE-010, Sprint 17 T-233.
+    config:
+      meta:
+        exposure: public
+        public_doc: true
+    columns:
+      - name: analysis_type_id
+        description: >
+          Stable slug identifier aligned with portfolIQ prompts/registry.yml
+          (e.g. 'token_classification', 'news_summary', 'sentiment_score').
+          Primary key — referenced by fact_ai_analysis.analysis_type_id.
+        tests:
+          - unique
+          - not_null
+
+      - name: analysis_type_label
+        description: "Human-readable label (e.g. 'Token Classification', 'News Summary')."
+        tests:
+          - not_null
+
+      - name: model_default
+        description: >
+          Default Claude model for this analysis type (e.g. 'claude-haiku-4-5').
+          NULL when is_enabled=false.
+
+      - name: refresh_cadence
+        description: >
+          Refresh trigger cadence (e.g. 'quarterly_or_event', 'trigger_new_news').
+          NULL when is_enabled=false.
+
+      - name: is_enabled
+        description: >
+          True if this analysis type is active in the portfolIQ AI pipeline.
+          False for halal_screening and reserved_* placeholders.
+        tests:
+          - not_null
+
+  - name: dim_tier
+    description: >
+      Static dimension — crypto asset market cap tier reference table (3 rows).
+      Tier 1=Top50, 2=Top51-200, 3=Top201-1000.
+      Tier boundary is market_cap_rank — NOT a fixed USD threshold.
+      min_market_cap_usd_approx is indicative and manually updated.
+      Not financial advice. Methodology disclosed.
+      Ref: COMITE-010, Sprint 17 T-233.
+    config:
+      meta:
+        exposure: public
+        public_doc: true
+    columns:
+      - name: tier
+        description: "Tier integer primary key: 1=Top50, 2=Top51-200, 3=Top201-1000."
+        tests:
+          - unique
+          - not_null
+
+      - name: tier_label
+        description: "Human-readable label (e.g. 'Tier 1 (Top 50)', 'Tier 2 (Top 200)')."
+        tests:
+          - not_null
+
+      - name: min_rank
+        description: "Minimum market cap rank (inclusive) for this tier."
+        tests:
+          - not_null
+
+      - name: max_rank
+        description: "Maximum market cap rank (inclusive) for this tier."
+        tests:
+          - not_null
+
+      - name: min_market_cap_usd_approx
+        description: >
+          Approximate minimum market cap in USD for this tier.
+          Indicative only — manually updated. NOT a contractual threshold.
+
+# ──────────────────────────────────────────────────────────────────────────────
+# FACTS (10)
+# ──────────────────────────────────────────────────────────────────────────────
+
+  - name: fact_market_snapshot
+    description: >
+      Star Schema fact view — derived market snapshot per asset per day.
+      Grain: (asset_sk, snapshot_date). price_consensus_usd = multi-exchange VWAP (3+ exchanges, MAR compliant).
+      market_cap_derived_usd = price x on-chain supply (BTC/ETH only in v1 — NULL for others, documented limitation).
+      DISCLAIMER: Not financial advice. Methodology disclosed.
+      Ref: COMITE-010, Sprint 18A T-236.
+    config:
+      meta:
+        exposure: public_recomputed
+        public_doc: true
+        disclaimer: "Not financial advice. Methodology disclosed."
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [asset_sk, snapshot_date]
+    columns:
+      - name: asset_sk
+        description: "Surrogate FK to dim_asset.asset_sk (current SCD2 version). NOT NULL."
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_asset')
+              field: asset_sk
+
+      - name: asset_id
+        description: "Stable integer business key (D-063, portfolIQ-assigned). NOT NULL."
+        tests:
+          - not_null
+
+      - name: snapshot_date
+        description: "UTC date of the market snapshot. Grain column. NOT NULL."
+        tests:
+          - not_null
+
+      - name: date_key
+        description: "FK to dim_date.date_key (YYYYMMDD integer). NOT NULL."
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_date')
+              field: date_key
+
+      - name: price_consensus_usd
+        description: >
+          Multi-exchange VWAP price in USD. Computed from 3+ exchanges (MAR compliance).
+          Derived portfolIQ data — redistributable. NOT a CoinGecko nominal price.
+          Not financial advice.
+        tests:
+          - not_null
+
+      - name: supply_on_chain
+        description: >
+          Circulating supply (native units) from on-chain data.
+          NULL for non-BTC/ETH assets in v1 (documented limitation, not a bug).
+
+      - name: market_cap_derived_usd
+        description: >
+          Derived market cap = price_consensus_usd x supply_on_chain.
+          NULL if supply_on_chain is NULL (non-BTC/ETH in v1).
+          Methodology: market-derived-v1.0. Not financial advice.
+
+      - name: tier_crypto
+        description: >
+          Market cap rank tier computed from market_cap_derived_usd (daily ranking).
+          1=Top50, 2=Top51-200, 3=Top201-1000. NULL if market_cap_derived_usd is NULL.
+        tests:
+          - accepted_values:
+              values: [1, 2, 3]
+              where: "tier_crypto is not null"
+
+      - name: exchanges_count
+        description: >
+          Number of exchanges contributing to the VWAP consensus. Minimum 3 (MAR compliance).
+          Audit trail column — verifies regulatory compliance of the price computation.
+        tests:
+          - not_null
+
+      - name: methodology_version
+        description: "Methodology version string. Expected: 'market-derived-v1.0'."
+        tests:
+          - not_null
+
+  - name: fact_vwap_consensus
+    description: >
+      Star Schema fact view — multi-exchange VWAP consensus prices.
+      Grain: (asset_sk, snapshot_ts, timeframe). vwap_usd is derived data — redistributable.
+      timeframe '1h' = Tier 1 assets only. '1d' = all assets.
+      max_source_weight_pct <= 0.50 enforced at source (MAR compliance).
+      DISCLAIMER: Not financial advice. Methodology disclosed.
+      Ref: COMITE-010, Sprint 18A T-237.
+    config:
+      meta:
+        exposure: public
+        public_doc: true
+        disclaimer: "Not financial advice. Methodology disclosed."
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [asset_sk, snapshot_ts, timeframe]
+    columns:
+      - name: asset_sk
+        description: "Surrogate FK to dim_asset.asset_sk."
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_asset')
+              field: asset_sk
+
+      - name: asset_id
+        description: "Stable integer business key (portfolIQ)."
+        tests:
+          - not_null
+
+      - name: snapshot_ts
+        description: "VWAP candle timestamp (UTC). Finer grain than fact_market_snapshot."
+        tests:
+          - not_null
+
+      - name: snapshot_date
+        description: "Date extracted from snapshot_ts (for calendar joins)."
+        tests:
+          - not_null
+
+      - name: date_key
+        description: "FK to dim_date.date_key (YYYYMMDD)."
+        tests:
+          - not_null
+
+      - name: timeframe
+        description: "'1h' for Tier 1 assets, '1d' for all tiers."
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['1h', '1d']
+
+      - name: vwap_usd
+        description: >
+          VWAP price in USD — portfolIQ computed derived data. Redistributable.
+          Source: 3+ exchanges (MAR compliance). Not a CoinGecko nominal price.
+        tests:
+          - not_null
+
+      - name: exchanges_count
+        description: "Number of exchanges contributing to this VWAP. Min 3 (MAR)."
+        tests:
+          - not_null
+
+      - name: max_source_weight_pct
+        description: >
+          Maximum weight of any single exchange in the VWAP computation.
+          Always <= 0.50 (MAR compliance: no single source > 50% weight).
+
+      - name: methodology_version
+        description: "VWAP methodology version. Expected: 'vwap-consensus-v1.1'."
+        tests:
+          - not_null
+
+  - name: fact_onchain_core
+    description: >
+      Star Schema fact view — on-chain core metrics per asset per day.
+      BTC + ETH only in v1 (other assets: no data by design, documented limitation).
+      Source: Blockstream.info (BTC), public RPC (ETH). No Etherscan.
+      DISCLAIMER: Not financial advice. Factual on-chain aggregates. Methodology disclosed.
+      Ref: COMITE-010, Sprint 18A T-238.
+    config:
+      meta:
+        exposure: public_recomputed
+        public_doc: true
+        disclaimer: "Not financial advice. Factual on-chain aggregates. Methodology disclosed."
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [asset_sk, snapshot_date]
+    columns:
+      - name: asset_sk
+        description: "Surrogate FK to dim_asset.asset_sk."
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_asset')
+              field: asset_sk
+
+      - name: asset_id
+        description: "Stable integer business key."
+        tests:
+          - not_null
+
+      - name: snapshot_date
+        description: "UTC date of the on-chain metric snapshot."
+        tests:
+          - not_null
+
+      - name: date_key
+        description: "FK to dim_date.date_key (YYYYMMDD)."
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_date')
+              field: date_key
+
+      - name: active_addresses
+        description: "Count of active blockchain addresses for this date. Nullable for ETH partial data."
+
+      - name: fees_total_usd
+        description: "Total network fees in USD for this date. Nullable for non-BTC/ETH assets."
+
+      - name: tx_count
+        description: "Total transaction count for this date. Nullable for ETH partial data."
+
+      - name: avg_fee_usd
+        description: "Average fee per transaction in USD. Derived from fees_total_usd / tx_count."
+
+      - name: source_rpc
+        description: "Public RPC endpoint name used as data source (audit trail). NOT a private API key."
+
+  - name: fact_onchain_advanced
+    description: >
+      Star Schema fact view — advanced on-chain metrics for BTC only (v1).
+      Realized Cap, MVRV, SOPR, NUPL, HODL waves. Source: BigQuery public data (MIT).
+      Gate: onchain:read (Growth tier+).
+      DISCLAIMER: Not financial advice. Factual descriptive metrics. Methodology disclosed.
+      Ref: COMITE-010, COMITE-009, Sprint 18A T-238.
+    config:
+      meta:
+        exposure: public_recomputed
+        public_doc: true
+        disclaimer: "Not financial advice. Factual descriptive metrics. Methodology disclosed."
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [asset_sk, snapshot_date]
+    columns:
+      - name: asset_sk
+        description: "Surrogate FK to dim_asset.asset_sk."
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_asset')
+              field: asset_sk
+
+      - name: asset_id
+        description: "Stable integer business key."
+        tests:
+          - not_null
+
+      - name: snapshot_date
+        description: "UTC date of the advanced on-chain metric snapshot."
+        tests:
+          - not_null
+
+      - name: date_key
+        description: "FK to dim_date.date_key (YYYYMMDD)."
+        tests:
+          - not_null
+
+      - name: realized_cap_usd
+        description: >
+          Realized capitalization in USD — sum of all UTXOs valued at their last moved price.
+          BTC-only in v1. Source: BigQuery public data (MIT licence).
+
+      - name: mvrv_ratio
+        description: >
+          Market Value to Realized Value ratio = market_cap / realized_cap.
+          Descriptive metric only. Not financial advice.
+
+      - name: nupl
+        description: >
+          Net Unrealized Profit/Loss = (market_cap - realized_cap) / market_cap.
+          Descriptive metric only. Not financial advice.
+
+      - name: sopr
+        description: >
+          Spent Output Profit Ratio — ratio of price at spending vs price at creation.
+          Descriptive metric only. Not financial advice.
+
+      - name: realized_price_usd
+        description: "Realized price in USD = realized_cap / circulating_supply_btc."
+
+      - name: hodl_waves
+        description: "JSONB breakdown of supply by UTXO age band (HODL waves). BTC-only."
+
+      - name: circulating_supply_btc
+        description: "Circulating BTC supply (native units) at this snapshot date."
+
+      - name: methodology_version
+        description: "On-chain methodology version. Expected: 'onchain-realized-metrics-v1.0'."
+        tests:
+          - not_null
+
+  - name: fact_asset_fundamentals
+    description: >
+      Star Schema fact view — P/S and P/R valuation ratios for DeFi assets.
+      Grain: (asset_sk, snapshot_date). Source: DeFiLlama (MIT licence) + VWAP-derived market cap.
+      Only assets with a DeFiLlama link are covered. Gate: fundamentals:read (Growth tier+).
+      DISCLAIMER: Factual valuation metrics only. Not financial advice. Not a fatwa.
+      Ref: COMITE-010, Sprint 18A T-239.
+    config:
+      meta:
+        exposure: public_recomputed
+        public_doc: true
+        disclaimer: "Factual valuation metrics only. Not financial advice. Not a fatwa. Methodology disclosed."
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [asset_sk, snapshot_date]
+    columns:
+      - name: asset_sk
+        description: "Surrogate FK to dim_asset.asset_sk."
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_asset')
+              field: asset_sk
+
+      - name: asset_id
+        description: "Stable integer business key."
+        tests:
+          - not_null
+
+      - name: snapshot_date
+        description: "UTC date of the fundamentals snapshot."
+        tests:
+          - not_null
+
+      - name: date_key
+        description: "FK to dim_date.date_key (YYYYMMDD)."
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_date')
+              field: date_key
+
+      - name: ps_ratio
+        description: >
+          Price-to-Sales ratio = market_cap_derived_usd / (fees_annualized).
+          Computed from VWAP-derived market cap + DeFiLlama fee data (MIT).
+          Factual valuation metric. Not financial advice.
+
+      - name: pr_ratio
+        description: >
+          Price-to-Revenue ratio = market_cap_derived_usd / revenue_annualized.
+          Computed from VWAP-derived market cap + DeFiLlama revenue data (MIT).
+          Factual valuation metric. Not financial advice.
+
+      - name: fees_30d_usd
+        description: "30-day cumulative protocol fees in USD. Source: DeFiLlama (MIT)."
+
+      - name: revenue_30d_usd
+        description: "30-day cumulative protocol revenue in USD. Source: DeFiLlama (MIT)."
+
+      - name: fees_annualized
+        description: "Annualized fee projection in USD (fees_30d_usd * 12). Indicative."
+
+      - name: revenue_annualized
+        description: "Annualized revenue projection in USD (revenue_30d_usd * 12). Indicative."
+
+      - name: methodology_version
+        description: "Methodology version string for audit trail."
+        tests:
+          - not_null
+
+  - name: fact_protocol_tvl
+    description: >
+      Star Schema fact view — portfolIQ self-calculated TVL per DeFi protocol per day.
+      Grain: (protocol_id, snapshot_date). tvl_usd = on-chain pool balances VWAP-priced.
+      tvl_change_*_pct computed via LAG on self-calc TVL only — NOT from DeFiLlama (redistribution forbidden).
+      protocol_id = defillama_slug BK (no dim_protocol in v1).
+      DISCLAIMER: Not financial advice. TVL self-calculated. Methodology disclosed.
+      Ref: COMITE-010, Sprint 18B T-241.
+    config:
+      meta:
+        exposure: public_recomputed
+        public_doc: true
+        disclaimer: "TVL self-calculated from on-chain pool balances. Not financial advice. Methodology disclosed."
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [protocol_id, snapshot_date]
+    columns:
+      - name: protocol_id
+        description: >
+          DeFiLlama slug — business key for the DeFi protocol (e.g. 'uniswap', 'aave').
+          FK to hub_defi_protocol.defillama_slug. No surrogate key in v1.
+        tests:
+          - not_null
+
+      - name: snapshot_date
+        description: "UTC date of the TVL snapshot. Grain column."
+        tests:
+          - not_null
+
+      - name: date_sk
+        description: "FK to dim_date.date_key (YYYYMMDD)."
+        tests:
+          - relationships:
+              to: ref('dim_date')
+              field: date_key
+
+      - name: tvl_usd
+        description: >
+          portfolIQ self-calculated Total Value Locked in USD.
+          Source: on-chain pool balances priced at VWAP consensus.
+          NOT from DeFiLlama (DeFiLlama TVL is a cross-check only, never redistributed).
+
+      - name: tvl_change_1d_pct
+        description: "1-day TVL change percentage. Computed via LAG on portfolIQ self-calc TVL."
+
+      - name: tvl_change_7d_pct
+        description: "7-day TVL change percentage. Computed via LAG on portfolIQ self-calc TVL."
+
+      - name: methodology_version
+        description: "TVL computation methodology version."
+        tests:
+          - not_null
+
+  - name: fact_protocol_economics
+    description: >
+      Star Schema fact view — DeFi protocol fees and revenue metrics per day.
+      Grain: (protocol_id, snapshot_date). Source: DeFiLlama (MIT licence).
+      Named 'economics' per COMITE-010 nomenclature.
+      DISCLAIMER: Factual on-chain derived metrics. Not financial advice.
+      Ref: COMITE-010, Sprint 18B T-242.
+    config:
+      meta:
+        exposure: public
+        public_doc: true
+        disclaimer: "Factual on-chain derived metrics. Not financial advice. Methodology disclosed."
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [protocol_id, snapshot_date]
+    columns:
+      - name: protocol_id
+        description: "DeFiLlama slug BK (e.g. 'uniswap', 'aave'). No surrogate key in v1."
+        tests:
+          - not_null
+
+      - name: date_sk
+        description: "FK to dim_date.date_key (YYYYMMDD)."
+        tests:
+          - relationships:
+              to: ref('dim_date')
+              field: date_key
+
+      - name: snapshot_date
+        description: "UTC date of the economics snapshot."
+        tests:
+          - not_null
+
+      - name: fees_24h_usd
+        description: "24-hour protocol fees in USD. Source: DeFiLlama (MIT)."
+      - name: revenue_24h_usd
+        description: "24-hour protocol revenue in USD. Source: DeFiLlama (MIT)."
+      - name: fees_7d_usd
+        description: "7-day cumulative protocol fees in USD. Source: DeFiLlama (MIT)."
+      - name: revenue_7d_usd
+        description: "7-day cumulative protocol revenue in USD. Source: DeFiLlama (MIT)."
+      - name: fees_30d_usd
+        description: "30-day cumulative protocol fees in USD. Source: DeFiLlama (MIT)."
+      - name: revenue_30d_usd
+        description: "30-day cumulative protocol revenue in USD. Source: DeFiLlama (MIT)."
+
+      - name: category
+        description: "Protocol category (e.g. 'Dexes', 'Lending', 'Liquid Staking'). From DeFiLlama."
+
+      - name: chains
+        description: "Array of chain names where the protocol operates. From DeFiLlama."
+
+  - name: fact_news_mention
+    description: >
+      Star Schema incremental fact — news article x mentioned asset pairs.
+      Grain: (article_hk, asset_sk). tokens_mentioned[] UNNESTed — 1 article x N tokens = N rows.
+      Token-to-asset mapping via NER (news_ner_v1, Claude Haiku 4.5).
+      DISCLAIMER: Not financial advice. Not a fatwa. Methodology disclosed.
+      Ref: COMITE-010, Sprint 18B T-243.
+    config:
+      meta:
+        exposure: public_recomputed
+        public_doc: true
+        disclaimer: "Not financial advice. Not a fatwa. Methodology disclosed."
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [article_hk, asset_sk]
+    columns:
+      - name: news_mention_sk
+        description: "Surrogate key on (article_hk, asset_sk). Unique, not null."
+        tests:
+          - unique
+          - not_null
+
+      - name: article_hk
+        description: "Hash key of the news article (from sat_asset_news_public). NOT NULL."
+        tests:
+          - not_null
+
+      - name: asset_sk
+        description: "Surrogate FK to dim_asset.asset_sk (current version). NOT NULL."
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_asset')
+              field: asset_sk
+
+      - name: news_source_sk
+        description: "FK to dim_news_source.news_source_sk. Nullable if editor is unknown."
+        tests:
+          - relationships:
+              to: ref('dim_news_source')
+              field: news_source_sk
+              where: "news_source_sk is not null"
+
+      - name: date_sk
+        description: "FK to dim_date.date_key (YYYYMMDD) from published_at::date."
+        tests:
+          - relationships:
+              to: ref('dim_date')
+              field: date_key
+              where: "date_sk is not null"
+
+      - name: published_at
+        description: "Article publication timestamp (UTC). Incremental watermark column."
+        tests:
+          - not_null
+
+  - name: fact_ai_analysis
+    description: >
+      Star Schema incremental fact — AI-generated analyses per asset per type per day.
+      Grain: (asset_sk, analysis_type_id, generated_date). Latest generated_at wins (DISTINCT ON).
+      Content generated by Claude Haiku 4.5 (85%) / Sonnet 4.6 (15%).
+      Internal metrics excluded: cost_usd_micros, cache_hit (never exposed).
+      AMF guard at ingestion: investment_verdict / fair_value / valuation_status FORBIDDEN.
+      DISCLAIMER: ai_generated=true required on all endpoints. Not financial advice.
+      Ref: COMITE-010, Sprint 18B T-244.
+    config:
+      meta:
+        exposure: public
+        public_doc: true
+        ai_generated: true
+        disclaimer: "Not financial advice. Methodology disclosed. AI-generated content."
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [asset_sk, analysis_type_id, generated_date]
+    columns:
+      - name: ai_analysis_sk
+        description: "Surrogate key on (asset_sk, analysis_type_id, generated_date::text). NOT NULL."
+        tests:
+          - unique
+          - not_null
+
+      - name: asset_sk
+        description: "Surrogate FK to dim_asset.asset_sk (is_current=true). NOT NULL."
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_asset')
+              field: asset_sk
+
+      - name: analysis_type_id
+        description: >
+          FK to dim_analysis_type.analysis_type_id. NOT NULL.
+          Expected values: token_classification, token_methodology, fundamental_summary,
+          news_summary, sentiment_score, event_extraction, news_ner_v1.
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_analysis_type')
+              field: analysis_type_id
+
+      - name: date_sk
+        description: "FK to dim_date.date_key based on generated_date. NOT NULL."
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_date')
+              field: date_key
+
+      - name: generated_date
+        description: "UTC date when the AI analysis was generated. Part of grain. NOT NULL."
+        tests:
+          - not_null
+
+      - name: model_id
+        description: >
+          AI model identifier. Expected: claude-haiku-4-5 (85%) or claude-sonnet-4-6 (15%).
+          NOT NULL.
+        tests:
+          - not_null
+
+      - name: prompt_version
+        description: "Version of the prompt template used (e.g. 'v1.0'). NULL for pre-versioning rows."
+
+      - name: content_json
+        description: >
+          JSONB payload of the AI-generated analysis content.
+          Schema varies by analysis_type_id — validated by Pydantic at ingestion.
+          AMF guard: investment_verdict / fair_value / valuation_status FORBIDDEN.
+
+      - name: methodology_version
+        description: "Analysis methodology version. NULL in v1 (reserved Sprint 20+)."
+
+  - name: fact_event
+    description: >
+      Star Schema incremental fact — crypto asset events.
+      Grain: (event_hk, asset_sk). Asset-linked events only (asset_hk IS NOT NULL).
+      Market-wide events excluded (BACKLOG: fact_market_event Sprint 19+).
+      DISCLAIMER: Not financial advice. Factual event data. Methodology disclosed.
+      Ref: COMITE-010, Sprint 18B T-245.
+    config:
+      meta:
+        exposure: public
+        public_doc: true
+        disclaimer: "Not financial advice. Factual event data. Methodology disclosed."
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [event_hk, asset_sk]
+    columns:
+      - name: event_fact_sk
+        description: "Surrogate key on (event_hk, asset_sk). Unique, not null."
+        tests:
+          - unique
+          - not_null
+
+      - name: event_hk
+        description: "Hash key of the event from hub_event. NOT NULL."
+        tests:
+          - not_null
+
+      - name: asset_sk
+        description: "Surrogate FK to dim_asset.asset_sk. NOT NULL."
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_asset')
+              field: asset_sk
+
+      - name: event_type_id
+        description: >
+          FK to dim_event_type.event_type_id. Nullable — LEFT JOIN tolerant
+          for unknown event types (row is kept with NULL type).
+        tests:
+          - relationships:
+              to: ref('dim_event_type')
+              field: event_type_id
+              where: "event_type_id is not null"
+
+      - name: date_sk
+        description: >
+          FK to dim_date.date_key from event_date. Nullable — LEFT JOIN tolerant
+          for NULL event_date or dates outside dim_date range.
+        tests:
+          - relationships:
+              to: ref('dim_date')
+              field: date_key
+              where: "date_sk is not null"
+
+      - name: event_date
+        description: "Calendar date of the event. Nullable — some events have no confirmed date."
+
+      - name: event_title
+        description: "Event title. NULL in v1 (not available in hub_event migration 014)."
+
+      - name: event_description
+        description: "Event description text from sat_asset_event.description."
+
+      - name: event_url
+        description: "Source URL of the event from hub_event."
+
+      - name: source
+        description: "Data source identifier for the event record."
+
+# ──────────────────────────────────────────────────────────────────────────────
+# SATELLITES (4 — public_recomputed pass-throughs)
+# ──────────────────────────────────────────────────────────────────────────────
+
+  - name: sat_asset_metadata_public
+    description: >
+      Public satellite — asset metadata (R1 multi-source). Exposure: public_recomputed.
+      Pass-through view of star_public.sat_asset_metadata_public.
+      Use dim_asset for SCD2 history. Use this satellite for direct metadata joins.
+      coingecko_id excluded (CoinGecko ToS §6.2).
+      Not financial advice. Methodology disclosed.
+      Sprint 16A T-219.
+    config:
+      meta:
+        exposure: public_recomputed
+        public_doc: false
+
+  - name: sat_asset_news_public
+    description: >
+      Public satellite — filtered news articles (R4: no title/excerpt). Exposure: public_recomputed.
+      Pass-through view of star_public.sat_asset_news_public.
+      tokens_mentioned: JSONB array of NER-extracted asset identifiers.
+      Use fact_news_mention for the exploded (article x asset) grain.
+      title/excerpt excluded (redistribution constraint per CoinGecko ToS).
+      Not financial advice. Methodology disclosed.
+      Sprint 16A T-222.
+    config:
+      meta:
+        exposure: public_recomputed
+        public_doc: false
+
+  - name: sat_asset_market_derived
+    description: >
+      Public satellite — derived market data (R2). Exposure: public_recomputed.
+      market_cap_derived_usd = VWAP x on-chain supply.
+      price_consensus_usd = multi-exchange VWAP (redistributable).
+      price_usd / market_cap_usd (CoinGecko nominal) excluded.
+      Not financial advice. Methodology disclosed.
+      Sprint 16B T-227.
+    config:
+      meta:
+        exposure: public_recomputed
+        public_doc: false
+
+  - name: sat_protocol_tvl_self
+    description: >
+      Public satellite — self-calculated TVL per protocol (R3). Exposure: public_recomputed.
+      tvl_self_calc_usd from on-chain pool balances.
+      DeFiLlama cross-check fields excluded (redistribution forbidden per ToS).
+      Use fact_protocol_tvl for the Star Schema grain with LAG-computed change metrics.
+      Not financial advice. Methodology disclosed.
+      Sprint 16B T-226.
+    config:
+      meta:
+        exposure: public_recomputed
+        public_doc: false
