@@ -1,0 +1,23 @@
+name: portfoliq
+version: 0.1.0
+description: >
+  portfolIQ dbt pack — Star Schema dimensions, facts, and satellite models
+  for crypto financial data. Transforms raw CoinGecko / DeFiLlama / FRED / ECB
+  ingested data into analytics-ready views. Includes AI-generated enrichment
+  columns (methodology disclosed).
+maintainers:
+  - name: portfolIQ
+    email: hello@portfoliq.io
+    github: portfoliq
+adapters:
+  - postgres
+license: ELv2
+repository: https://github.com/portfoliq/portfoliq-dbt
+documentation: https://docs.portfoliq.io/dbt-pack
+keywords:
+  - crypto
+  - finance
+  - star-schema
+  - data-vault
+  - halal-screening
+  - timescaledb
