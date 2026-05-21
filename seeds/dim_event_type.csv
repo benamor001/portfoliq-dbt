@@ -1,0 +1,19 @@
+event_type_id,event_type_label,description,affects_price_typically
+halving,Halving,Reduction of block reward by half,true
+hard_fork,Hard Fork,Backward-incompatible protocol change,true
+soft_fork,Soft Fork,Backward-compatible protocol upgrade,false
+mainnet_launch,Mainnet Launch,Launch of the main production network,true
+testnet_launch,Testnet Launch,Launch of a test network,false
+governance_vote,Governance Vote,On-chain governance proposal or vote,false
+exchange_listing,Exchange Listing,Asset listed on a major centralized exchange,true
+exchange_delisting,Exchange Delisting,Asset removed from a major centralized exchange,true
+github_release,GitHub Release,Major software version release on GitHub,false
+security_incident,Security Incident,Hack exploit or security vulnerability disclosed,true
+partnership,Partnership,Major business partnership announcement,false
+regulatory_event,Regulatory Event,Regulatory ruling or enforcement action affecting the asset,true
+network_upgrade,Network Upgrade,Planned protocol upgrade or migration,false
+token_burn,Token Burn,Permanent on-chain destruction of tokens,true
+staking_event,Staking Event,Change in staking mechanism rewards or requirements,false
+airdrop,Airdrop,Distribution of tokens to holders or wallets,true
+ico_ido,ICO/IDO,Initial Coin Offering or Initial DEX Offering,true
+token_unlock,Token Unlock,Vesting unlock of team investor or treasury tokens,true

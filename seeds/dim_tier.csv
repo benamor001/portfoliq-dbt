@@ -1,0 +1,4 @@
+tier,tier_label,min_rank,max_rank,min_market_cap_usd_approx
+1,Tier 1 (Top 50),1,50,2000000000
+2,Tier 2 (Top 200),51,200,200000000
+3,Tier 3 (Top 1000),201,1000,10000000
