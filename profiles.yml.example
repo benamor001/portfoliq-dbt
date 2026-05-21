@@ -1,0 +1,40 @@
+# portfolIQ dbt package — profiles.yml template
+# Copy this file to profiles.yml and fill in your credentials.
+#
+# The portfolIQ pack reads exclusively from the star_public schema
+# on your PostgreSQL instance (read-only credentials are sufficient).
+#
+# NEVER commit your profiles.yml with real credentials.
+# Add profiles.yml to your .gitignore.
+#
+# portfolIQ API documentation: https://portfoliq.io/docs/dbt-pack
+
+portfoliq:
+  target: dev
+  outputs:
+
+    dev:
+      type: postgres
+      host: "{{ env_var('PORTFOLIQ_DB_HOST', 'localhost') }}"
+      port: "{{ env_var('PORTFOLIQ_DB_PORT', '5432') | int }}"
+      user: "{{ env_var('PORTFOLIQ_DB_USER', 'portfoliq_reader') }}"
+      password: "{{ env_var('PORTFOLIQ_DB_PASSWORD') }}"
+      dbname: "{{ env_var('PORTFOLIQ_DB_NAME', 'portfoliq') }}"
+      schema: star_public
+      threads: 4
+      keepalives_idle: 0
+      connect_timeout: 10
+      search_path: star_public
+
+    prod:
+      type: postgres
+      host: "{{ env_var('PORTFOLIQ_DB_HOST') }}"
+      port: "{{ env_var('PORTFOLIQ_DB_PORT', '5432') | int }}"
+      user: "{{ env_var('PORTFOLIQ_DB_USER') }}"
+      password: "{{ env_var('PORTFOLIQ_DB_PASSWORD') }}"
+      dbname: "{{ env_var('PORTFOLIQ_DB_NAME', 'portfoliq') }}"
+      schema: star_public
+      threads: 8
+      keepalives_idle: 0
+      connect_timeout: 10
+      search_path: star_public
