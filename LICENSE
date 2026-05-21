@@ -1,0 +1,111 @@
+Elastic License 2.0
+
+Copyright (c) 2026 portfolIQ
+
+---
+
+ELASTIC LICENSE AGREEMENT
+Version 2.0
+
+PLEASE READ THIS ELASTIC LICENSE AGREEMENT ("Agreement") BEFORE USING THE
+SOFTWARE. BY USING THE SOFTWARE, YOU AGREE TO BE BOUND BY THE TERMS AND
+CONDITIONS OF THIS AGREEMENT. IF YOU DO NOT AGREE TO THESE TERMS AND
+CONDITIONS, DO NOT USE THE SOFTWARE.
+
+This Agreement sets forth the terms and conditions under which Elastic N.V.,
+a Netherlands corporation with offices at Keizersgracht 281, 1016 ED
+Amsterdam, the Netherlands ("Licensor") makes the Software available to
+you ("Licensee").
+
+---
+
+TERMS AND CONDITIONS
+
+1. Grant of Rights
+
+The Licensor grants you a non-exclusive, worldwide, non-sublicensable,
+non-transferable license to:
+
+  a. use the Software;
+  b. prepare modifications and derivative works of the Software;
+  c. distribute the Software and modifications thereof.
+
+2. Conditions
+
+You may exercise the rights in Section 1 above only if you satisfy all of
+the following conditions.
+
+  a. You may not provide the Software to third parties as a hosted or managed
+     service, where the service provides users with access to any substantial
+     set of the features or functionality of the Software.
+
+  b. You may not move, change, disable, or circumvent the license key
+     functionality in the Software, and you may not remove or obscure any
+     functionality in the Software that is protected by the license key.
+
+  c. You may not alter, remove, or obscure any licensing, copyright, or other
+     notices of the Licensor in the Software. Any use of the Licensor's
+     trademarks is subject to applicable law.
+
+3. Patents
+
+The Licensor grants you a license, under any patent claims the Licensor can
+license, or becomes able to license, to make, have made, use, sell, offer
+for sale, import, and have imported the Software, in each case subject to
+the conditions in Section 2.
+
+The Licensor has no obligation to grant you a patent license for the
+Software.
+
+4. Notices
+
+You must ensure that anyone who gets a copy of any part of the Software from
+you also gets a copy of these terms.
+
+If you modify the Software, you must include in any modified copies of the
+Software a prominent notice stating that you have modified the Software.
+
+5. No Other Rights
+
+These terms do not imply any licenses other than those expressly granted in
+these terms.
+
+6. Termination
+
+If you use the Software in violation of these terms, such use is not
+licensed, and your licenses will automatically terminate. If the Licensor
+provides you with a notice of your violation, and you cease all violation of
+this license no later than 30 days after you receive that notice, your
+licenses will be reinstated retroactively. However, if you violate these
+terms after such reinstatement, any additional violation of these terms will
+cause your licenses to terminate automatically and permanently.
+
+7. No Liability
+
+As far as the law allows, the Software comes as is, without any warranty or
+condition, and the Licensor will not be liable to you for any damages arising
+out of these terms or the use or nature of the Software, under any kind of
+legal claim.
+
+8. Definitions
+
+  "Software" means each version of the software that the Licensor makes
+  available under these terms.
+
+  "Modification" means the Software or any derivative work of the Software.
+
+  "You" means the individual or entity agreeing to these terms.
+
+  "Licensor" means the entity offering these terms.
+
+  "License key" means a key that the Licensor has provided to you that
+  enables you to use the Software.
+
+---
+
+This license is Copyright (c) 2021 Elastic N.V. and licensed under the
+Creative Commons Attribution 4.0 International License.
+
+For the portfoliq-dbt package specifically:
+Copyright (c) 2026 portfolIQ
+All rights reserved under the terms above.

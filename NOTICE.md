@@ -1,0 +1,153 @@
+# NOTICE — portfoliq-dbt package
+
+Version 0.1.0 — Copyright (c) 2026 portfolIQ (portfoliq.io)
+
+This file fulfills the disclosure obligations defined in §9quinquies.7 of the
+portfolIQ legal validation (legal/SOURCES-M0-validation.md, COMITE-010).
+Seven clauses are mandatory per condition §9quinquies.9.8.
+
+---
+
+## Clause A — License grant (ELv2)
+
+The portfoliq-dbt package is distributed under the **Elastic License v2 (ELv2)**.
+See `LICENSE` for the full text.
+
+Key restriction under ELv2: **you may not provide the Software to third parties
+as a hosted or managed service** where the service provides users access to a
+substantial set of the features or functionality of this package. In other words:
+you may not operate a competing "dbt-transformation-as-a-service" or
+"Data-as-a-Service" built primarily on this package.
+
+portfolIQ grants each active subscriber a non-exclusive, non-transferable,
+non-sublicensable license to use the portfoliq-dbt package for **internal data
+transformation purposes** within the subscriber's organization, for the duration
+of an active portfolIQ subscription. Upon termination of the subscription, the
+subscriber must cease active use; already-materialized metrics may be retained
+for historical reference.
+
+---
+
+## Clause B — No data included — Attribution of upstream sources
+
+The portfoliq-dbt package contains **transformation code only**. It does not
+contain, bundle, or redistribute any market data.
+
+The subscriber is responsible for ingesting source data into a `raw.*` schema
+in compliance with the terms of each upstream provider. portfolIQ does not
+grant any sub-license to those sources. The following sources are referenced
+by the transformation models:
+
+| Source | License / Terms | Usage in models |
+|--------|----------------|-----------------|
+| CoinGecko Demo API | CoinGecko ToS — free tier, no redistribution of raw data | Token metadata, market cap, OHLCV |
+| DeFiLlama | MIT License (open-source) | Protocol TVL data |
+| Federal Reserve (FRED) | Public domain (U.S. government) | Macro indicators |
+| ECB Statistical Data Warehouse (SDW) | ECB open data terms | EUR exchange rates, monetary data |
+| BigQuery Public Datasets (crypto_ethereum, etc.) | Google Public Data terms (CC0 / Apache 2.0 per dataset) | On-chain reference data |
+
+The subscriber must verify the current terms of each source at the time of use.
+portfolIQ's validation snapshot is dated 2026-05-20 (COMITE-010).
+
+Attribution per source terms:
+- CoinGecko: "Powered by CoinGecko API" where user-visible output is derived from CoinGecko fields.
+- DeFiLlama: acknowledgment recommended in derived products per project norms.
+- FRED: "Source: Federal Reserve Bank of St. Louis" per FRED usage guidelines.
+- ECB: "Source: European Central Bank" per ECB open data policy.
+
+---
+
+## Clause C — Internal-only models — No public re-exposure
+
+Models tagged `meta.exposure: internal_only` in `models/schema.yml` **must not**
+be exposed publicly by the subscriber (e.g. via the subscriber's own public API,
+marketplace listing, or data product).
+
+This restriction reflects the upstream source terms from which these models derive
+and is a condition of the ELv2 license grant. Only models tagged
+`meta.exposure: public` may be surfaced in subscriber-facing products.
+
+---
+
+## Clause D — No competing data product
+
+The subscriber may not use the portfoliq-dbt package to build a data product
+that is substantially similar to portfolIQ's published API and offered as a
+competing service. Internal use, derived analytics, and client-specific
+applications are permitted.
+
+Specifically, the subscriber may not:
+- Re-syndicate, re-sell, sub-license, or redistribute portfolIQ API responses
+  (in whole or in substantial part) as a standalone data feed.
+- Bulk-export portfolIQ data to populate a third-party data catalog,
+  marketplace listing, or competing API.
+- Train machine learning models on portfolIQ API output for the purpose of
+  building a competing data product (training for own internal applications
+  is permitted).
+
+---
+
+## Clause E — No financial advice — Disclaimer
+
+**portfolIQ does not provide investment advice, personalized recommendations,
+or religious rulings (fatwa).**
+
+The metrics computed by this package are factual market data and
+methodology-disclosed derived indicators. They are provided **for informational
+purposes only** and do not constitute financial advice, investment
+recommendations, or regulatory benchmarks under Regulation (EU) 2016/1011 (BMR).
+
+> "Not financial advice. Not a fatwa. Methodology disclosed."
+
+Subscribers are solely responsible for their own investment decisions and for
+communicating appropriate disclaimers to their own users.
+
+---
+
+## Clause F — AI-generated content
+
+Certain columns in the output schemas are tagged `ai_generated: true`
+(see `exposure_tag` in `models/schema.yml`).
+
+These columns contain content generated by large language models (Claude Haiku /
+Claude Sonnet, Anthropic). AI-generated content:
+- Is not verified by a qualified financial analyst or Islamic finance scholar.
+- May contain hallucinations or errors.
+- Carries the same "not financial advice / not a fatwa" disclaimer as all other
+  portfolIQ outputs.
+- Is historized with a `prompt_version` and `generated_at` timestamp so that
+  changes in AI-generated interpretations are traceable.
+
+Subscribers must communicate to their own users that certain data fields are
+AI-generated when those fields are surfaced in user-facing products.
+
+---
+
+## Clause G — RGPD / GDPR — No PII in package
+
+The portfoliq-dbt package is **code only**. It contains zero personally
+identifiable information (PII).
+
+The seeds bundled with the package (`seeds/`) contain only reference data
+(chain names, event type labels, tier thresholds, analysis type labels) with
+no personal data.
+
+When the subscriber connects this package to their own data sources that may
+contain personal data, **the subscriber is the data controller** and is solely
+responsible for their own GDPR compliance, including lawful basis for processing,
+data subject rights, and retention policies.
+
+portfolIQ's infrastructure (when the subscriber uses the portfolIQ API as a
+source) is hosted in the EU (Hetzner DE/FI) and complies with GDPR as a data
+processor. A Data Processing Agreement (DPA) is available for B2B subscribers
+on request at privacy@portfoliq.io.
+
+---
+
+## References
+
+- Full legal validation: `legal/SOURCES-M0-validation.md` §9quinquies (COMITE-010, 2026-05-20)
+- Package license: `LICENSE` (ELv2)
+- Package readme: `README.md`
+- Contributing guide: `CONTRIBUTING.md`
+- Publishing procedure: `PUBLISHING.md`
