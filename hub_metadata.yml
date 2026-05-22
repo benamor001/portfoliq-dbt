@@ -13,7 +13,7 @@ adapters:
   - postgres
 license: ELv2
 repository: https://github.com/portfoliq/portfoliq-dbt
-documentation: https://docs.portfoliq.io/dbt-pack
+documentation: https://portfoliq.io/docs/bi-package
 keywords:
   - crypto
   - finance

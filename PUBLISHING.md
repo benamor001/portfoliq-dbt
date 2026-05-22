@@ -140,3 +140,93 @@ on push/PR to paths matching `dbt-package/**`. It performs:
 
 No live database is required. The `portfoliq_enable_star: false` flag causes all
 models to return empty sets without opening a connection.
+
+---
+
+## Final Pre-Flight Checklist 2026-05-22
+
+Run through every item before executing `make publish-dbt-package`. All 15 must
+be green.
+
+| # | Item | Status |
+|---|------|--------|
+| 1 | `dbt-package/LICENSE` present (ELv2) | OK |
+| 2 | `dbt-package/NOTICE.md` present (7 clauses §9quinquies.7) | OK |
+| 3 | `dbt-package/README.md` present — quickstart 5 min, links to `/docs/bi-package` | OK |
+| 4 | `dbt-package/dbt_project.yml` version `0.1.0`, profile `portfoliq` | OK |
+| 5 | `dbt-package/hub_metadata.yml` — name, version, license ELv2, adapters [postgres], docs URL `portfoliq.io/docs/bi-package` | OK — fixed T-341 |
+| 6 | 17 SQL models (3 dims + 10 facts + 4 sats) | OK |
+| 7 | 4 seeds (dim_chain, dim_event_type, dim_analysis_type, dim_tier) | OK |
+| 8 | 125+ tests in `models/schema.yml` (239 test entries audited) | OK |
+| 9 | 20 example queries in `dbt-package/examples/queries/` | OK |
+| 10 | `dbt-package/CONTRIBUTING.md` present | OK |
+| 11 | Makefile cibles `publish-dbt-package`, `init-dbt-pack-remote`, `pre-publish-check` | OK |
+| 12 | `.github/workflows/dbt-pack-ci.yml` CI present and valid | OK |
+| 13 | `profiles.yml` removed from git tracking — `git rm --cached` done T-341 | OK — fixed T-341 |
+| 14 | `dbt parse` PASS (CI validates on push) | OK |
+| 15 | Links to `/docs/bi-package` coherent post-Sprint 23 (README + hub_metadata) | OK — fixed T-341 |
+
+Command to run when ready:
+
+```bash
+# 1. Automated anti-leak check
+make pre-publish-check
+
+# 2. Publish subtree to public repo
+make publish-dbt-package
+```
+
+---
+
+## Post-publication runbook
+
+### A — GitHub repository setup (one-time, after first push)
+
+1. Go to `https://github.com/portfoliq/portfoliq-dbt` → Settings → Topics.
+   Add these topics: `dbt`, `crypto`, `dbt-package`, `star-schema`, `postgres`,
+   `data-vault`, `timescaledb`, `finance`.
+2. Add a repo description: "portfolIQ dbt pack — Star Schema models for crypto financial data".
+3. Set the website URL to `https://portfoliq.io/docs/bi-package`.
+4. Create a semver tag for the initial release:
+   ```bash
+   git tag v0.1.0
+   git push origin v0.1.0
+   ```
+
+### B — dbt Hub submission
+
+Submit to the dbt Hub (hub.getdbt.com) after the GitHub repo has at least one
+public tagged release (v0.1.0).
+
+Standard process: open a PR on `dbt-labs/hubcap` adding the package entry, or
+use the web form at `https://hub.getdbt.com/publish/`.
+
+Fields to provide (from `hub_metadata.yml`):
+- Package name: `portfoliq/portfoliq_dbt`
+- Version: `0.1.0`
+- License: ELv2
+- Adapters: postgres
+- Documentation: `https://portfoliq.io/docs/bi-package`
+- Repository: `https://github.com/portfoliq/portfoliq-dbt`
+
+dbt Hub review is manual and may take 1-4 weeks. Acceptance criteria: public
+repo, valid `dbt_project.yml`, tests present, documentation link live.
+
+### C — Show HN post template
+
+```
+Title: Show HN: portfoliq-dbt — open dbt package for crypto Star Schema (ELv2)
+
+We built a dbt package that materializes a Star Schema (3 dims + 10 facts +
+4 satellites) on top of crypto market data (CoinGecko, DeFiLlama, FRED, ECB,
+on-chain BigQuery). Aimed at data engineers building fintech apps who want
+analytics-ready models without reinventing the wheel.
+
+- GitHub: https://github.com/portfoliq/portfoliq-dbt
+- Docs: https://portfoliq.io/docs/bi-package
+- 17 SQL models, 4 seeds, 125+ tests, 20 example queries
+- Compatible with Power BI / Tableau / Metabase / Lightdash / Cube.dev
+- License: Elastic License v2 (internal use free, SaaS resale restricted)
+
+Not financial advice. Methodology disclosed.
+```
