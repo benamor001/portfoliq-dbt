@@ -1,6 +1,6 @@
 # NOTICE — portfoliq-dbt package
 
-Version 0.1.0 — Copyright (c) 2026 portfolIQ (portfoliq.io)
+Version 0.2.0 — Copyright (c) 2026 portfolIQ (portfoliq.io)
 
 This file fulfills the disclosure obligations defined in §9quinquies.7 of the
 portfolIQ legal validation (legal/SOURCES-M0-validation.md, COMITE-010).
@@ -150,10 +150,46 @@ on request at privacy@portfoliq.io.
 
 ---
 
+---
+
+## Clause H — v0.2.0 Multi-Asset Source Extension
+
+The following sources are added in portfoliq-dbt v0.2.0. Each column indicates whether
+portfolIQ redistributes the raw data or derived/transformed outputs only.
+
+This section fulfills the disclosure obligation of §9quinquies.7 for the v0.2.0 release
+(COMITE-010 extension, 2026-05-22).
+
+| Source | License / Terms | Redistribuable (raw) | Redistribuable (dérivé) | Usage dans le pack | Référence légale |
+|--------|----------------|----------------------|-------------------------|--------------------|-----------------|
+| FRED — Federal Reserve Bank of St. Louis | Public domain (U.S. government work) | Yes | Yes | `sat_macro_observation`, `sat_commodity_spot`, `fact_macro_observation` — macro series, commodity spots (WTI, Gold, Silver, etc.) | 12 U.S.C. § 225a; FRED usage guidelines (no attribution required, encouraged: "Source: FRED, Federal Reserve Bank of St. Louis") |
+| ECB Statistical Data Warehouse (SDW) | ECB open data terms | Yes | Yes | `stg_ecb_sdw_observations`, `sat_fx_rate`, `fact_macro_observation` — EUR pairs, monetary policy rates, Eurozone macro | ECB open data policy: free reuse with attribution "Source: European Central Bank" |
+| SEC EDGAR — U.S. Securities and Exchange Commission | Public domain (17 CFR §200.80) | Yes | Yes | `stg_sec_edgar_xbrl`, `sat_stock_fundamentals`, `fact_stock_fundamentals` — XBRL GAAP fundamentals; `stg_sec_edgar_13f`, `sat_etf_holdings` — 13F/N-PORT institutional holdings | 17 CFR §200.80 — SEC data is U.S. government work, no copyright. EDGAR API ToS (2024): free, bulk download permitted for non-real-time use. Attribution: "Source: SEC EDGAR" |
+| Tiingo / Polygon / FMP (stock OHLCV) | Tiingo ToS: internal use only — redistribution of raw data forbidden | **No** (raw) | **Yes** (dérivé) | `stg_tiingo_stock_eod` → `sat_stock_ohlcv` (`internal_only`, not exposed in pack) → `sat_stock_market_derived` (VWAP + derived metrics, `public_recomputed`, redistribuable). Raw data is NEVER exposed in this pack. | Tiingo ToS §4 "You may not resell or redistribute the data." The pack distributes only VWAP-derived aggregates computed by portfolIQ. Subscriber must verify their own Tiingo license for raw ingestion. |
+| KIDs PRIIPs — EU UCITS Key Information Documents | EU public regulatory documents (UCITS IV Directive 2009/65/EC; PRIIPs Reg. EU 1286/2014) | Yes | Yes | `stg_kid_priips`, `sat_etf_holdings` — EU ETF holdings from regulatory KIDs (publicly filed and mandated for investor access) | EU regulations require public accessibility of KIDs. Commercial use of structured data extracted from KIDs is permitted (documents are public by law). Attribution: "Source: [Fund Manager] KIDs PRIIPs filing" where applicable. |
+| EDINET — Japan FSA Electronic Disclosure for Investors | PDL 1.0 (Public Domain Licence 1.0 Japan — Government) | Yes | Yes | `sat_stock_fundamentals` (Japan-listed companies) — XBRL financial filings | EDINET PDL 1.0: reuse including commercial use permitted with attribution "Source: EDINET (Japan FSA)". XBRL data may be extracted and redistributed with attribution. |
+| TWSE — Taiwan Stock Exchange | Open Government License v1.0 (Taiwan National Development Council) | Yes | Yes | `sat_stock_fundamentals` (Taiwan-listed companies) — TWSE financial statements | OGL Taiwan v1.0: commercial use permitted with attribution "Source: Taiwan Stock Exchange Corporation (TWSE)". Subscriber must not imply TWSE endorsement. |
+
+### Subscriber obligations for v0.2.0 sources
+
+1. **FRED** — Attribution encouraged: "Source: FRED, Federal Reserve Bank of St. Louis."
+2. **ECB SDW** — Attribution required: "Source: European Central Bank."
+3. **SEC EDGAR** — Attribution recommended: "Source: SEC EDGAR." Accession number (`accession_number` column) must be preserved for audit trail per MAR/BMR.
+4. **Tiingo et al.** — Subscribers must hold their own valid Tiingo/Polygon/FMP license to ingest raw `raw.tiingo_stock_eod_*` data. portfolIQ's derived models (`sat_stock_market_derived`) do not transfer any Tiingo license to the subscriber.
+5. **KIDs PRIIPs** — Attribution per fund manager where applicable. Structural accuracy of KIDs data is the fund manager's responsibility.
+6. **EDINET** — Attribution: "Source: EDINET (Japan FSA)." Must not imply FSA endorsement.
+7. **TWSE** — Attribution: "Source: Taiwan Stock Exchange Corporation (TWSE)." Must not imply TWSE endorsement.
+
+portfolIQ's legal validation snapshot for v0.2.0 sources is dated 2026-05-22 (COMITE-010 extension).
+Subscribers must verify current terms at time of use. Terms may change.
+
+---
+
 ## References
 
-- Full legal validation: `legal/SOURCES-M0-validation.md` §9quinquies (COMITE-010, 2026-05-20)
+- Full legal validation: `legal/SOURCES-M0-validation.md` §9quinquies (COMITE-010, 2026-05-20; v0.2.0 extension 2026-05-22)
 - Package license: `LICENSE` (ELv2)
 - Package readme: `README.md`
 - Contributing guide: `CONTRIBUTING.md`
 - Publishing procedure: `PUBLISHING.md`
+- Changelog: `CHANGELOG.md`
