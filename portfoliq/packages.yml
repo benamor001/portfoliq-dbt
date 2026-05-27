@@ -1,0 +1,11 @@
+# =============================================================================
+# portfoliq — package dependencies
+#
+# dbt_utils is the only external dependency. Used for:
+#   - dbt_utils.unique_combination_of_columns (composite grain uniqueness)
+#   - dbt_utils.generate_surrogate_key (where applicable)
+# =============================================================================
+
+packages:
+  - package: dbt-labs/dbt_utils
+    version: [">=1.1.0", "<2.0.0"]

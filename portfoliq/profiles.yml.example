@@ -1,0 +1,19 @@
+# =============================================================================
+# Example profile for portfoliq dbt package
+# Copy to ~/.dbt/profiles.yml (or alongside this dbt_project.yml) and edit.
+# =============================================================================
+
+portfoliq:
+  target: dev
+  outputs:
+    dev:
+      type: postgres
+      host: "{{ env_var('PORTFOLIQ_PG_HOST', 'localhost') }}"
+      port: "{{ env_var('PORTFOLIQ_PG_PORT', 5432) | as_number }}"
+      user: "{{ env_var('PORTFOLIQ_PG_USER', 'portfoliq') }}"
+      password: "{{ env_var('PORTFOLIQ_PG_PASSWORD') }}"
+      dbname: "{{ env_var('PORTFOLIQ_PG_DBNAME', 'portfoliq') }}"
+      schema: marts
+      threads: 4
+      keepalives_idle: 0
+      sslmode: prefer

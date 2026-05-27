@@ -1,0 +1,114 @@
+version: 2
+
+# =============================================================================
+# portfoliq — seed dimensions (data provider + data license catalogs)
+#
+# These seeds describe the legal/attribution constraints attached to each
+# upstream provider. BI consumers join facts on `provider` → dim_data_provider
+# to surface attribution text, and chain dim_data_provider.license_code →
+# dim_data_license to filter redistributable vs non-commercial subsets.
+# =============================================================================
+
+seeds:
+
+  - name: dim_data_provider
+    description: >
+      Static reference dimension — data provider catalog for the macro/identifier/crypto
+      sources used in this package. PK = provider_code.
+      Methodology disclosed.
+    config:
+      meta:
+        exposure: public
+    columns:
+      - name: provider_code
+        description: "Stable provider identifier (UPPERCASE_SNAKE_CASE). PK."
+        tests:
+          - unique
+          - not_null
+      - name: provider_name
+        description: "Full human-readable provider name."
+        tests:
+          - not_null
+      - name: category
+        description: "Provider category."
+        tests:
+          - not_null
+          - accepted_values:
+              values: [macro, crypto, identifier, fundamentals, market_data, news, regulatory]
+      - name: license_code
+        description: "FK to dim_data_license.license_code."
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_data_license')
+              field: license_code
+      - name: license_url
+        description: "Canonical URL of the license terms."
+      - name: attribution_required
+        description: "TRUE if attribution must be displayed when surfacing this provider's data."
+        tests:
+          - not_null
+      - name: redistribution_allowed
+        description: "TRUE if portfolIQ can redistribute raw fields. FALSE = derived-only."
+        tests:
+          - not_null
+      - name: attribution_text
+        description: "Canonical attribution string to display."
+        tests:
+          - not_null
+      - name: is_active
+        description: "TRUE if the provider is currently ingested."
+        tests:
+          - not_null
+
+  - name: dim_data_license
+    description: >
+      Static reference dimension — data license catalog (CC0, CC-BY, OGL v3, Etalab v2, etc.).
+      Permits BI consumers to filter for 'free-redistribute' vs 'attribution-required' vs
+      'non-commercial' subsets. PK = license_code.
+      Methodology disclosed.
+    config:
+      meta:
+        exposure: public
+    columns:
+      - name: license_code
+        description: "Stable license identifier (UPPERCASE_SNAKE_CASE). PK."
+        tests:
+          - unique
+          - not_null
+      - name: license_name
+        description: "Full license name."
+        tests:
+          - not_null
+      - name: license_family
+        description: "License family classification."
+        tests:
+          - not_null
+          - accepted_values:
+              values: [creative_commons, government, proprietary_open, proprietary_restricted, permissive_software]
+      - name: license_url
+        description: "Canonical URL of the license text."
+        tests:
+          - not_null
+      - name: is_open_data
+        description: "TRUE if recognised as open data."
+        tests:
+          - not_null
+      - name: redistribution_allowed
+        description: "TRUE if the license allows redistribution."
+        tests:
+          - not_null
+      - name: commercial_use_allowed
+        description: "TRUE if commercial use is permitted."
+        tests:
+          - not_null
+      - name: attribution_required
+        description: "TRUE if attribution to the source must be displayed."
+        tests:
+          - not_null
+      - name: share_alike
+        description: "TRUE if derivatives must be released under the same license."
+        tests:
+          - not_null
+      - name: notes
+        description: "Free-text contextual notes about license applicability."
