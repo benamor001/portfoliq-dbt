@@ -64,6 +64,38 @@ seeds:
         max_rank: integer
         min_market_cap_usd_approx: bigint
 
+    # Demo seeds — synthetic data for DuckDB local dev + CI smoke tests (T-688)
+    # Legal: synthetic values only, not real market data. See seeds/schema.yml.
+    demo_assets:
+      +tags: ['demo']
+      +column_types:
+        asset_sk: integer
+        asset_id: text
+        ticker: text
+        name: text
+        tier: integer
+        contract_address: text
+        sources_confirmed: integer
+        single_source: boolean
+        methodology_version: text
+        valid_from: date
+        valid_to: date
+        is_current: boolean
+
+    demo_market_snapshots:
+      +tags: ['demo']
+      +column_types:
+        asset_sk: integer
+        asset_id: text
+        snapshot_date: date
+        date_key: integer
+        price_consensus_usd: double
+        supply_on_chain: bigint
+        market_cap_derived_usd: double
+        tier_crypto: integer
+        exchanges_count: integer
+        methodology_version: text
+
 # ──────────────────────────────────────────────────────────────────────────────
 # Variables
 # portfoliq_enable_star: true  → normal operation (read from star_public)

@@ -7,11 +7,20 @@
 > **Not financial advice. Not a fatwa. Methodology disclosed.**
 > See [portfoliq.io/methodology](https://portfoliq.io/methodology).
 
-[![CI](https://github.com/portfoliq/portfoliq-dbt/actions/workflows/dbt-pack-ci.yml/badge.svg)](https://github.com/portfoliq/portfoliq-dbt/actions)
+[![CI syntax](https://github.com/portfoliq/portfoliq-dbt/actions/workflows/dbt-pack-ci.yml/badge.svg)](https://github.com/portfoliq/portfoliq-dbt/actions/workflows/dbt-pack-ci.yml)
+[![CI matrix Postgres+DuckDB](https://github.com/portfoliq/portfoliq-dbt/actions/workflows/dbt-package.yml/badge.svg)](https://github.com/portfoliq/portfoliq-dbt/actions/workflows/dbt-package.yml)
 [![License: ELv2](https://img.shields.io/badge/License-ELv2-blue.svg)](LICENSE)
 [![dbt](https://img.shields.io/badge/dbt-%3E%3D1.8-orange)](https://docs.getdbt.com)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-blue)](https://www.postgresql.org)
 [![Version](https://img.shields.io/badge/version-0.2.0-green)](CHANGELOG.md)
+
+---
+
+## DuckDB support — local dev without Postgres
+
+Run the full package locally in 30 seconds using DuckDB. No server, no credentials.
+
+See **[README-duckdb.md](README-duckdb.md)** for the 5-command quick start.
 
 ---
 

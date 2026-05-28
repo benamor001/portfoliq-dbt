@@ -39,6 +39,19 @@ portfoliq:
       connect_timeout: 10
       search_path: star_public
 
+    # --- DuckDB target — local dev without any infrastructure (T-688) ---
+    # Requires: pip install dbt-duckdb
+    # Run: dbt seed --target duckdb_dev --select tag:demo
+    #      dbt build --target duckdb_dev
+    # The .duckdb file is created at the path below; no server needed.
+    # Schema 'dv' matches the portfolIQ Data Vault naming convention.
+    # Note: seeds use synthetic data only. See seeds/schema.yml disclaimer.
+    duckdb_dev:
+      type: duckdb
+      path: /tmp/portfoliq_dev.duckdb
+      schema: dv
+      threads: 4
+
 # --- CI target (smoke tests — T-606) ---
 # Used by scripts/ci_dbt_smoke.sh and .github/workflows/dbt-smoke.yml
 # Copy the block below to your .dbt/profiles.yml (gitignored)
