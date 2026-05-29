@@ -7,6 +7,7 @@
 > **Not financial advice. Not a fatwa. Methodology disclosed.**
 > See [portfoliq.io/methodology](https://portfoliq.io/methodology).
 
+[![API Status](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/portfoliq-io/portfolIQ/master/api/summary.json&label=API&style=flat)](https://status.portfoliq.io)
 [![CI syntax](https://github.com/portfoliq/portfoliq-dbt/actions/workflows/dbt-pack-ci.yml/badge.svg)](https://github.com/portfoliq/portfoliq-dbt/actions/workflows/dbt-pack-ci.yml)
 [![CI matrix Postgres+DuckDB](https://github.com/portfoliq/portfoliq-dbt/actions/workflows/dbt-package.yml/badge.svg)](https://github.com/portfoliq/portfoliq-dbt/actions/workflows/dbt-package.yml)
 [![License: ELv2](https://img.shields.io/badge/License-ELv2-blue.svg)](LICENSE)
