@@ -1,19 +1,51 @@
 # portfoliq-dbt v0.2.0
 
-> portfolIQ Star Schema as a dbt package — now multi-asset.
-> Connect your dbt project to portfolIQ's financial data (crypto, stocks, ETF, commodities, FX, macro)
-> via a direct PostgreSQL read-only connection.
+> portfolIQ Star Schema as a dbt **consumer pack**.
+> Connect your dbt project to portfolIQ's crypto financial data via a direct,
+> read-only PostgreSQL connection to our published Star Schema (`star_public`).
+>
+> **This is a consumer pack, not a transformation framework.** It does not
+> ingest or transform raw data on your side — it exposes portfolIQ's already-built
+> Star Schema (dimensions, facts, satellites) as analytics-ready dbt models that
+> read from the `star_public` schema we serve. You point a dbt profile at our
+> read-only SQL endpoint and `dbt build` materialises thin pass-through views in
+> your warehouse.
+>
+> **Scope today: crypto (top-1000 tier-ised).** Stocks / ETF / commodities / FX /
+> macro are on the [Roadmap](#roadmap) — see the note there before relying on them.
 >
 > **Not financial advice. Not a fatwa. Methodology disclosed.**
 > See [portfoliq.io/methodology](https://portfoliq.io/methodology).
 
 [![API Status](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/portfoliq-io/portfolIQ/master/api/summary.json&label=API&style=flat)](https://status.portfoliq.io)
-[![CI syntax](https://github.com/portfoliq/portfoliq-dbt/actions/workflows/dbt-pack-ci.yml/badge.svg)](https://github.com/portfoliq/portfoliq-dbt/actions/workflows/dbt-pack-ci.yml)
-[![CI matrix Postgres+DuckDB](https://github.com/portfoliq/portfoliq-dbt/actions/workflows/dbt-package.yml/badge.svg)](https://github.com/portfoliq/portfoliq-dbt/actions/workflows/dbt-package.yml)
+[![CI syntax](https://github.com/<org>/portfoliq-dbt/actions/workflows/dbt-pack-ci.yml/badge.svg)](https://github.com/<org>/portfoliq-dbt/actions/workflows/dbt-pack-ci.yml)
+[![CI matrix Postgres+DuckDB](https://github.com/<org>/portfoliq-dbt/actions/workflows/dbt-package.yml/badge.svg)](https://github.com/<org>/portfoliq-dbt/actions/workflows/dbt-package.yml)
 [![License: ELv2](https://img.shields.io/badge/License-ELv2-blue.svg)](LICENSE)
 [![dbt](https://img.shields.io/badge/dbt-%3E%3D1.8-orange)](https://docs.getdbt.com)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-blue)](https://www.postgresql.org)
 [![Version](https://img.shields.io/badge/version-0.2.0-green)](CHANGELOG.md)
+
+---
+
+## How this pack works (consumption model)
+
+```
+  portfolIQ (us)                          your warehouse
+  ┌─────────────────────┐    read-only    ┌──────────────────────────┐
+  │  star_public schema │ ◄────SQL──────  │  dbt build (this pack)   │
+  │  (we build & serve) │                 │  → thin pass-through      │
+  │  dims / facts / sats │                 │    views + reference seeds│
+  └─────────────────────┘                 └──────────────────────────┘
+                                                     │
+                                                     ▼
+                                            your BI / SQL / models
+```
+
+You do **not** ingest or transform raw market data. You connect a dbt profile to our
+read-only `star_public` endpoint, run `dbt deps && dbt seed && dbt build`, and the pack
+materialises analytics-ready views (plus 4 reference seeds) in your warehouse. It is a
+**consumer pack**, not an ELT framework. Use the resulting Star Schema from SQL or any
+PostgreSQL-compatible BI tool.
 
 ---
 
@@ -30,21 +62,18 @@ See **[README-duckdb.md](README-duckdb.md)** for the 5-command quick start.
 ```yaml
 # packages.yml
 packages:
-  - git: "https://github.com/portfoliq/portfoliq-dbt.git"
+  - git: "https://github.com/<org>/portfoliq-dbt.git"
     revision: v0.2.0
-
-# dbt_project.yml — enable what you need (all false by default)
-vars:
-  enable_stocks:      true   # SEC EDGAR fundamentals + derived OHLCV
-  enable_etf:         true   # 13F/N-PORT + KIDs PRIIPs EU
-  enable_commodities: true   # FRED spot prices (WTI, Gold, Silver…)
-  enable_macro:       true   # FRED + ECB SDW economic series
-  enable_fx:          true   # ECB SDW EUR pairs + derived cross-rates
 ```
 
 ```bash
 dbt deps && dbt seed && dbt build
 ```
+
+> **Scope note (v0.2.0):** this pack ships **crypto** models only. The multi-asset
+> `enable_stocks / enable_etf / enable_commodities / enable_macro / enable_fx`
+> toggles are **roadmap** — they are not wired in this release and have no effect
+> if set. See [Roadmap](#roadmap).
 
 ---
 
@@ -64,14 +93,15 @@ Requires a portfolIQ Growth plan or above.
 
 ```yaml
 packages:
-  - git: "https://github.com/portfoliq/portfoliq-dbt.git"
+  - git: "https://github.com/<org>/portfoliq-dbt.git"
     revision: v0.2.0
-    # Or via dbt Hub once approved:
-    # package: portfoliq/portfoliq_dbt
-    # version: [">=0.2.0", "<1.0.0"]
 ```
 
 Then run `dbt deps`.
+
+> **Distribution channel:** git-install is the **primary** method. The package is
+> ELv2-licensed (not an OSI-approved licence), so a dbt Hub listing is not guaranteed —
+> always rely on the git URL above. Pin to a tag (`v0.2.0`), not a branch.
 
 ### 3. Configure your dbt profile
 
@@ -101,10 +131,7 @@ See [`profiles.yml.example`](profiles.yml.example) for dev/prod template.
 
 ---
 
-## Quick Start (crypto-only — default, no config needed)
-
-v0.2.0 is **backwards-compatible**. If you were using v0.1.x, no change is needed to get
-the same crypto-only behavior:
+## Quick Start (crypto — no config needed)
 
 ```bash
 dbt deps
@@ -112,10 +139,11 @@ dbt seed
 dbt build --select portfoliq.*
 ```
 
-All v0.1.0 models run identically. No new tables are created unless you opt in (see below).
+This builds the crypto dimensions, facts and satellites as views over `star_public`,
+plus the reference seeds. No other configuration is required.
 
 ```sql
--- Crypto top 10 by market cap (identical to v0.1)
+-- Crypto top 10 by market cap
 SELECT da.ticker, fms.price_consensus_usd, fms.market_cap_derived_usd, fms.snapshot_date
 FROM star_public.fact_market_snapshot fms
 JOIN star_public.dim_asset da ON fms.asset_sk = da.asset_sk
@@ -125,28 +153,14 @@ ORDER BY fms.market_cap_derived_usd DESC NULLS LAST LIMIT 10;
 
 ---
 
-## Multi-asset opt-in
+## Multi-asset — roadmap (NOT in v0.2.0)
 
-Set any combination in your `dbt_project.yml`. All vars default to `false`.
-
-```yaml
-vars:
-  enable_stocks:      true   # Activates: stg_sec_edgar_xbrl, sat_stock_fundamentals,
-                             #            sat_stock_market_derived, fact_stock_fundamentals,
-                             #            fact_market_price (stock slice)
-  enable_etf:         true   # Activates: stg_sec_edgar_13f, stg_kid_priips, sat_etf_holdings,
-                             #            sat_etf_nav, link_etf_constituent, fact_etf_holdings,
-                             #            fact_market_price (etf slice)
-  enable_commodities: true   # Activates: sat_commodity_spot, fact_market_price (commodity slice)
-  enable_macro:       true   # Activates: stg_fred_observations, stg_ecb_sdw_observations,
-                             #            sat_macro_observation, fact_macro_observation
-  enable_fx:          true   # Activates: stg_ecb_sdw_observations (fx subset), sat_fx_rate,
-                             #            fact_market_price (fx slice)
-```
-
-**Important:** `fact_market_price` (polymorphic) is always compiled, but only returns rows for
-enabled kinds. With all vars `false` (default), it returns crypto data only
-(via `sat_asset_vwap_consensus`).
+Stocks, ETF, commodities, FX and macro coverage is planned but **not shipped in this
+release**. The `enable_stocks / enable_etf / enable_commodities / enable_macro /
+enable_fx` toggles described in earlier drafts are **not wired** in v0.2.0 and have no
+effect. Crypto data quality is production-grade; the other asset classes are still
+thin upstream (see [Roadmap](#roadmap)). This section will be filled in when the
+multi-asset models land.
 
 ---
 
@@ -154,36 +168,35 @@ enabled kinds. With all vars `false` (default), it returns crypto data only
 
 ### Dimensions
 
-| Model | Type | Grain | Exposure | Depends on var |
+| Model | Type | Grain | Exposure | Notes |
 |---|---|---|---|---|
-| `dim_asset` | SCD2 view | (asset_hk, valid_from) | public | — (stable) |
-| `dim_date` | view | date | public | — |
-| `dim_news_source` | SCD1 view | news_source_id | public | — |
-| `dim_asset_kind` | seed | asset_kind_key | public | — (always loaded) |
-| `dim_chain` | seed | chain_id | public | — |
-| `dim_event_type` | seed | event_type_id | public | — |
-| `dim_analysis_type` | seed | analysis_type_id | public | — |
-| `dim_tier` | seed | tier | public | — |
+| `dim_asset` | SCD2 view | (asset_hk, valid_from) | public | reads `star_public` |
+| `dim_date` | view | date | public | reads `star_public` |
+| `dim_news_source` | SCD1 view | news_source_id | public | reads `star_public` |
+| `dim_chain` | seed | chain_id | reference | bundled CSV |
+| `dim_event_type` | seed | event_type_id | reference | bundled CSV |
+| `dim_analysis_type` | seed | analysis_type_id | reference | bundled CSV |
+| `dim_tier` | seed | tier | reference | bundled CSV |
 
 ### Facts
 
-| Model | Materialization | Grain | Exposure | Depends on var |
-|---|---|---|---|---|
-| `fact_market_snapshot` | view | (asset_sk, snapshot_date) | public | — (stable v0.1) |
-| `fact_vwap_consensus` | view | (asset_sk, snapshot_ts, timeframe) | public | — (stable v0.1) |
-| `fact_onchain_core` | view | (asset_sk, snapshot_date) | public | — (stable v0.1) |
-| `fact_onchain_advanced` | view | (asset_sk, snapshot_date) | public | — (stable v0.1) |
-| `fact_asset_fundamentals` | view | (asset_sk, snapshot_date) | public | — (stable v0.1) |
-| `fact_protocol_tvl` | view | (protocol_id, snapshot_date) | public | — (stable v0.1) |
-| `fact_protocol_economics` | view | (protocol_id, snapshot_date) | public | — (stable v0.1) |
-| `fact_news_mention` | incremental | (article_hk, asset_sk) | public | — (stable v0.1) |
-| `fact_ai_analysis` | incremental | (asset_sk, analysis_type_id, generated_date) | public | — (stable v0.1) |
-| `fact_event` | incremental | (event_hk, asset_sk) | public | — (stable v0.1) |
-| `fact_market_price` | view | (asset_sk, ts, timeframe) | public_recomputed | — (always, but gated slices) **new v0.2** |
-| `fact_stock_fundamentals` | view | (asset_sk, period_end_date, filing_type) | public | enable_stocks **new v0.2** |
-| `fact_etf_holdings` | view | (etf_asset_sk, constituent_identifier, snapshot_month) | public | enable_etf **new v0.2** |
-| `fact_macro_observation` | view | (series_sk, observation_date, vintage_date) | public | enable_macro **new v0.2** |
-| `fact_market_correlation` | incremental | (asset_sk_a, asset_sk_b, window_days, snapshot_date) | public_recomputed | — (always active) **new v0.2** |
+All facts in v0.2.0 are **crypto** and read from `star_public`.
+
+| Model | Materialization | Grain | Exposure |
+|---|---|---|---|
+| `fact_market_snapshot` | view | (asset_sk, snapshot_date) | public |
+| `fact_vwap_consensus` | view | (asset_sk, snapshot_ts, timeframe) | public |
+| `fact_onchain_core` | view | (asset_sk, snapshot_date) | public |
+| `fact_onchain_advanced` | view | (asset_sk, snapshot_date) | public |
+| `fact_asset_fundamentals` | view | (asset_sk, snapshot_date) | public |
+| `fact_protocol_tvl` | view | (protocol_id, snapshot_date) | public |
+| `fact_protocol_economics` | view | (protocol_id, snapshot_date) | public |
+| `fact_news_mention` | view | (article_hk, asset_sk) | public |
+| `fact_ai_analysis` | view | (asset_sk, analysis_type_id, generated_date) | public |
+| `fact_event` | view | (event_hk, asset_sk) | public |
+
+> `fact_market_price`, `fact_stock_fundamentals`, `fact_etf_holdings`,
+> `fact_macro_observation`, `fact_market_correlation` are **roadmap** — not in v0.2.0.
 
 ### Satellites (public_recomputed)
 
@@ -193,144 +206,71 @@ enabled kinds. With all vars `false` (default), it returns crypto data only
 | `sat_asset_news_public` | News articles: URL + editor + NER + AI summary | public_recomputed |
 | `sat_asset_market_derived` | VWAP consensus price + derived market cap | public_recomputed |
 | `sat_protocol_tvl_self` | Self-calculated TVL from on-chain balances | public_recomputed |
-| `sat_asset_classification` | Sector, GICS, halal attributes — all asset kinds | public_recomputed **new v0.2** |
-| `sat_stock_market_derived` | Stock VWAP-derived OHLCV (redistribuable derivé) | public_recomputed **new v0.2** |
 
 ---
 
 ## Schema output — key columns
 
-### `fact_market_price` (polymorphic)
+### `fact_market_snapshot` (crypto daily snapshot)
 
 | Column | Type | Description |
 |---|---|---|
 | `asset_sk` | text | FK → `dim_asset.asset_sk` |
 | `asset_id` | integer | Stable public BK |
-| `asset_kind` | text | crypto/stock/etf/commodity/fx |
-| `listing_venue` | text | MIC or authority (coingecko, XNAS, XNYS…) |
-| `ts` | timestamptz | Timestamp timezone-aware |
 | `snapshot_date` | date | Date for `dim_date` join |
-| `timeframe` | text | '1h' (crypto Tier 1) or '1d' (all) |
-| `open` | numeric(28,10) | NULL for crypto/etf/commodity/fx |
-| `high` | numeric(28,10) | NULL for crypto/etf/commodity/fx |
-| `low` | numeric(28,10) | NULL for crypto/etf/commodity/fx |
-| `close` | numeric(28,10) | NEVER NULL — the price contract |
-| `volume` | numeric(28,2) | Shares for stock; NULL for others |
-| `venues_count` | smallint | Crypto VWAP consensus only |
+| `price_consensus_usd` | numeric | VWAP multi-exchange consensus price |
+| `market_cap_derived_usd` | numeric | Derived market cap (redistributable) |
+| `supply_on_chain` | numeric | On-chain circulating supply |
+| `exchanges_count` | smallint | Number of venues in the consensus |
 | `methodology_version` | text | Audit trail |
 
-### `dim_asset` (v0.2 additions — additive strict)
-
-New columns added: `asset_kind` (text, NOT NULL), `listing_venue` (text, NOT NULL),
-`asset_kind_label` (text, NOT NULL, denormalized from `dim_asset_kind`).
-All v0.1 columns unchanged.
-
----
-
-## Breaking-safe upgrade v0.1.x → v0.2.0
-
-**TL;DR: No breaking change. Default behaviour after upgrade: identical to v0.1.x.**
-
-### Step 1 — pin the new version
-
-```yaml
-# packages.yml
-packages:
-  - git: "https://github.com/portfoliq/portfoliq-dbt.git"
-    revision: v0.2.0
-```
-
-### Step 2 — run dbt deps + dbt seed
-
-```bash
-dbt deps
-dbt seed --select dim_asset_kind  # new seed, 6 fixed rows, idempotent
-```
-
-### Step 3 — run dbt build (identical to v0.1)
-
-```bash
-dbt build
-```
-
-Zero new tables or views are created. The DAG is identical to v0.1.x.
-All `enable_*` vars default to `false`, so no new models are compiled.
-
-### Step 4 — opt-in to multi-asset (when ready)
-
-```yaml
-# dbt_project.yml
-vars:
-  enable_stocks:      true
-  enable_etf:         true
-  enable_commodities: true
-  enable_macro:       true
-  enable_fx:          true
-```
-
-Then re-run: `dbt build`
-
-This builds the new staging/satellite/fact models for enabled kinds.
-
-### Schema drift on `dim_asset`
-
-Three columns are added to `dim_asset` in v0.2: `asset_kind`, `listing_venue`, `asset_kind_label`.
-
-If you have downstream models or BI dashboards that do `SELECT * FROM dim_asset` into a
-fixed-schema sink, refactor to explicit column lists OR drop+recreate the sink table.
-
-`SELECT col1, col2 FROM dim_asset` remains fully valid. No action needed.
-
-### Rolling back
-
-Pin back to v0.1.x in `packages.yml`, then:
-
-```bash
-dbt clean && dbt deps && dbt build
-```
-
-The opt-in vars gracefully resolve to `false` if absent.
+The full column contract for every model lives in [`models/schema.yml`](models/schema.yml),
+which is also rendered by `dbt docs generate`.
 
 ---
 
 ## Running tests
 
 ```bash
-# All tests (v0.1 + v0.2)
+# All package tests
 dbt test --select portfoliq.*
 
-# Only v0.1 tests (regression gate)
-dbt test --select tag:v0.1
-
-# Only v0.2 tests
-dbt test --select tag:v0.2
-
-# Specific model
-dbt test --select fact_market_price
+# Tests for a specific model
+dbt test --select fact_market_snapshot
 ```
 
-125 YAML tests for v0.1 models. 13 additional tests for v0.2 (range, relationships,
-symmetry, ETF weight sum, vintage anti-lookahead).
+The package ships schema tests (not_null, unique, accepted_values, relationships,
+dbt_utils range/expression checks) declared in `models/schema.yml` and `seeds/schema.yml`,
+plus 3 singular tests in `tests/`. Default severity is configured per the host project;
+override with `tests: portfoliq: +severity: error` to enforce in your CI.
 
 ---
 
-## Connectors BI compatibility
+## BI tool compatibility (SQL-direct, no native connector)
 
-| Tool | Compatibility | Remarks |
-|---|---|---|
-| **Metabase** | Auto FK detection on `asset_sk` | `asset_kind_label` in dimension filters |
-| **Tableau** | TIL relationship model | Conformed dim Kimball-compatible |
-| **Power BI** | Star schema model, DirectQuery | PG latency <200ms P95 |
-| **Lightdash** | Reads dbt yml `meta.*` | `exposure: public_recomputed` respected |
-| **Cube** | Schema YAML generation | Full semantic layer |
+This package builds a **Kimball-style Star Schema queryable in plain SQL**. There is
+**no bundled BI connector** — you consume the views/tables directly over PostgreSQL.
+Any BI tool that speaks PostgreSQL (ODBC/JDBC) works: point it at the schema where the
+package materialised, and model the joins on the conformed `asset_sk` / `date_key` keys.
 
-Full setup guides: [portfoliq.io/docs/bi-package](https://portfoliq.io/docs/bi-package)
+| Tool | How it consumes the pack |
+|---|---|
+| **Metabase / Lightdash / Superset** | Direct PostgreSQL connection to the materialised schema |
+| **Tableau / Power BI** | PostgreSQL ODBC/JDBC driver, DirectQuery against the Star Schema |
+| **Cube / dbt Semantic Layer** | Build your own semantic model on top of these dbt models |
+
+A first-class Power BI template and a Cube wrapper are on the [Roadmap](#roadmap).
 
 ---
 
 ## SQL examples
 
-See [`queries/cross-asset/`](queries/cross-asset/) for 20 ready-to-use queries:
+See [`queries/cross-asset/`](queries/cross-asset/) for ready-to-use queries.
+
+> **Scope note:** some example queries (cross-asset correlations, stock DJIM inputs,
+> macro regimes, polymorphic `fact_market_price`) target **roadmap** models/data that
+> are not part of the v0.2.0 crypto pack. They are shipped as reference patterns; the
+> crypto-only examples (e.g. AAOIFI top-50 screening, market snapshots) run today.
 
 | File | Description |
 |---|---|
@@ -349,17 +289,26 @@ See [`queries/cross-asset/`](queries/cross-asset/) for 20 ready-to-use queries:
 
 ## Data sources and licenses
 
-This package contains transformation code only. No data is bundled.
+This package contains transformation code only. No data is bundled. The `License`
+column below describes the **upstream data provider's** licence (for attribution),
+not this package's licence — the package itself is ELv2 (see [License](#license)).
 
-| Source | License | Redistribution | Usage in models |
+Sources powering the **v0.2.0 crypto** models:
+
+| Source | Upstream license | Redistribution | Usage in models |
 |---|---|---|---|
 | CoinGecko Demo API | CoinGecko ToS | Derived metrics only | Crypto metadata, OHLCV raw |
-| DeFiLlama | MIT | Yes | Protocol TVL, fees |
-| FRED (Federal Reserve) | Public domain (US Gov) | Yes | Macro indicators, commodity spots |
-| ECB Statistical Data Warehouse | ECB open data | Yes | EUR rates, monetary data |
+| DeFiLlama | MIT (upstream) | Yes | Protocol TVL, fees |
+| FRED (Federal Reserve) | Public domain (US Gov) | Yes | Macro indicators (regimes) |
+| ECB Statistical Data Warehouse | ECB open data | Yes | EUR rates |
+
+Sources for **roadmap** (stocks / ETF) models — listed for transparency, not yet shipped:
+
+| Source | Upstream license | Redistribution | Roadmap usage |
+|---|---|---|---|
 | SEC EDGAR | Public domain (17 CFR §200.80) | Yes | Stock fundamentals (XBRL), 13F |
 | KIDs PRIIPs (EU UCITS) | EU public (UCITS IV Dir.) | Yes | ETF holdings EU |
-| Tiingo / Polygon / FMP | Internal use only | Derived OK, raw forbidden | `sat_stock_ohlcv` (internal_only) → `sat_stock_market_derived` (redistribuable) |
+| Tiingo / Polygon / FMP | Internal use only | Derived OK, raw forbidden | Stock OHLCV → derived only |
 | EDINET (Japan FSA) | PDL 1.0 + attribution | Commercial OK | Japan stock filings |
 | TWSE Taiwan | Open Government License v1.0 | Yes | Taiwan exchange data |
 
@@ -390,11 +339,15 @@ Internal use and derived analytics are permitted.
 
 ## Roadmap
 
+- **Multi-asset models** — stocks, ETF, commodities, FX, macro (the `enable_*` toggles
+  and `fact_market_price` polymorphic fact). Crypto-quality first; other classes are
+  still thin upstream.
 - HTTP API source mode (no SQL credentials required)
-- Snowflake / BigQuery / DuckDB adapters
-- Native Power BI `.pbix` templates — multi-asset
-- Cube.dev semantic layer wrapper with `dim_asset_kind` filters
-- dbt Hub submission (M9+)
+- Snowflake / BigQuery adapters (DuckDB already supported for local dev)
+- Native Power BI `.pbix` templates
+- Cube.dev semantic layer wrapper
+- dbt Hub submission (subject to ELv2 / non-OSI acceptance; git-install is the
+  primary distribution channel)
 
 ---
 
@@ -404,5 +357,5 @@ Internal use and derived analytics are permitted.
 - SQL access: [portfoliq.io/docs/get-started/sql-access](https://portfoliq.io/docs/get-started/sql-access)
 - API reference: [api.portfoliq.io/docs](https://api.portfoliq.io/docs)
 - Status: [status.portfoliq.io](https://status.portfoliq.io)
-- GitHub Issues: [github.com/portfoliq/portfoliq-dbt/issues](https://github.com/portfoliq/portfoliq-dbt/issues)
+- GitHub Issues: [github.com/<org>/portfoliq-dbt/issues](https://github.com/<org>/portfoliq-dbt/issues)
 - Email: hello@portfoliq.io

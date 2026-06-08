@@ -4,9 +4,33 @@ All notable changes to portfoliq-dbt are documented in this file.
 
 Format: [Semantic Versioning](https://semver.org/). Unreleased changes are staged in `main`.
 
+> **Scope correction (2026-06-08).** The "Multi-asset opt-in" entries documented under
+> 0.2.0 below (the `enable_*` vars; `dim_asset_kind` seed; `fact_market_price`,
+> `fact_stock_fundamentals`, `fact_etf_holdings`, `fact_macro_observation`,
+> `fact_market_correlation`; and the stock/ETF/macro satellites) describe **planned work
+> that did NOT ship** in the released package. The actual **shipped v0.2.0 is crypto-only**
+> (10 crypto facts, 3 dimension views, 4 reference seeds, 4 satellites — all reading
+> `star_public`). Those multi-asset entries are retained as **roadmap** history; treat the
+> "What actually shipped in v0.2.0" section as authoritative.
+
 ---
 
-## [0.2.0] — 2026-05-22
+## What actually shipped in v0.2.0 (authoritative)
+
+- **Dimensions (views):** `dim_asset` (SCD2), `dim_date`, `dim_news_source`.
+- **Reference seeds (CSV):** `dim_chain`, `dim_event_type`, `dim_analysis_type`, `dim_tier`
+  (+ `demo_assets`, `demo_market_snapshots` synthetic seeds for DuckDB local dev).
+- **Facts (crypto, over `star_public`):** `fact_market_snapshot`, `fact_vwap_consensus`,
+  `fact_onchain_core`, `fact_onchain_advanced`, `fact_asset_fundamentals`,
+  `fact_protocol_tvl`, `fact_protocol_economics`, `fact_news_mention`,
+  `fact_ai_analysis`, `fact_event`.
+- **Satellites:** `sat_asset_metadata_public`, `sat_asset_news_public`,
+  `sat_asset_market_derived`, `sat_protocol_tvl_self`.
+- **Licence:** Elastic License v2 (ELv2). **Distribution:** git-install.
+
+---
+
+## [0.2.0] — 2026-05-22 (planned scope — see correction above)
 
 ### Added
 
