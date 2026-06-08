@@ -223,7 +223,8 @@ seeds:
         tests:
           - not_null
           - accepted_values:
-              values: [1, 2, 3]
+              arguments:
+                values: [1, 2, 3]
       - name: contract_address
         description: "ERC-20 contract address for on-chain assets. Empty for non-EVM assets."
       - name: sources_confirmed
@@ -268,8 +269,9 @@ seeds:
         tests:
           - not_null
           - relationships:
-              to: ref('demo_assets')
-              field: asset_sk
+              arguments:
+                to: ref('demo_assets')
+                field: asset_sk
       - name: asset_id
         description: "Asset slug identifier. Synthetic."
         tests:
@@ -302,7 +304,8 @@ seeds:
         tests:
           - not_null
           - accepted_values:
-              values: [1, 2, 3]
+              arguments:
+                values: [1, 2, 3]
       - name: exchanges_count
         description: "Number of exchanges covering this asset. Synthetic."
         tests:

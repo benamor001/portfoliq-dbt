@@ -265,9 +265,9 @@ models:
         tests:
           - not_null
           - relationships:
-              to: ref('dim_asset')
-              field: asset_sk
-
+              arguments:
+                to: ref('dim_asset')
+                field: asset_sk
       - name: asset_id
         description: "Stable integer business key (D-063, portfolIQ-assigned). NOT NULL."
         tests:
@@ -283,9 +283,9 @@ models:
         tests:
           - not_null
           - relationships:
-              to: ref('dim_date')
-              field: date_key
-
+              arguments:
+                to: ref('dim_date')
+                field: date_key
       - name: price_consensus_usd
         description: >
           Multi-exchange VWAP price in USD. Computed from 3+ exchanges (MAR compliance).
@@ -311,9 +311,10 @@ models:
           1=Top50, 2=Top51-200, 3=Top201-1000. NULL if market_cap_derived_usd is NULL.
         tests:
           - accepted_values:
-              values: [1, 2, 3]
-              where: "tier_crypto is not null"
-
+              config:
+                where: "tier_crypto is not null"
+              arguments:
+                values: [1, 2, 3]
       - name: exchanges_count
         description: >
           Number of exchanges contributing to the VWAP consensus. Minimum 3 (MAR compliance).
@@ -349,9 +350,9 @@ models:
         tests:
           - not_null
           - relationships:
-              to: ref('dim_asset')
-              field: asset_sk
-
+              arguments:
+                to: ref('dim_asset')
+                field: asset_sk
       - name: asset_id
         description: "Stable integer business key (portfolIQ)."
         tests:
@@ -377,7 +378,8 @@ models:
         tests:
           - not_null
           - accepted_values:
-              values: ['1h', '1d']
+              arguments:
+                values: ['1h', '1d']
 
       - name: vwap_usd
         description: >
@@ -423,9 +425,9 @@ models:
         tests:
           - not_null
           - relationships:
-              to: ref('dim_asset')
-              field: asset_sk
-
+              arguments:
+                to: ref('dim_asset')
+                field: asset_sk
       - name: asset_id
         description: "Stable integer business key."
         tests:
@@ -441,9 +443,9 @@ models:
         tests:
           - not_null
           - relationships:
-              to: ref('dim_date')
-              field: date_key
-
+              arguments:
+                to: ref('dim_date')
+                field: date_key
       - name: active_addresses
         description: "Count of active blockchain addresses for this date. Nullable for ETH partial data."
 
@@ -481,9 +483,9 @@ models:
         tests:
           - not_null
           - relationships:
-              to: ref('dim_asset')
-              field: asset_sk
-
+              arguments:
+                to: ref('dim_asset')
+                field: asset_sk
       - name: asset_id
         description: "Stable integer business key."
         tests:
@@ -555,9 +557,9 @@ models:
         tests:
           - not_null
           - relationships:
-              to: ref('dim_asset')
-              field: asset_sk
-
+              arguments:
+                to: ref('dim_asset')
+                field: asset_sk
       - name: asset_id
         description: "Stable integer business key."
         tests:
@@ -573,9 +575,9 @@ models:
         tests:
           - not_null
           - relationships:
-              to: ref('dim_date')
-              field: date_key
-
+              arguments:
+                to: ref('dim_date')
+                field: date_key
       - name: ps_ratio
         description: >
           Price-to-Sales ratio = market_cap_derived_usd / (fees_annualized).
@@ -639,9 +641,9 @@ models:
         description: "FK to dim_date.date_key (YYYYMMDD)."
         tests:
           - relationships:
-              to: ref('dim_date')
-              field: date_key
-
+              arguments:
+                to: ref('dim_date')
+                field: date_key
       - name: tvl_usd
         description: >
           portfolIQ self-calculated Total Value Locked in USD.
@@ -685,9 +687,9 @@ models:
         description: "FK to dim_date.date_key (YYYYMMDD)."
         tests:
           - relationships:
-              to: ref('dim_date')
-              field: date_key
-
+              arguments:
+                to: ref('dim_date')
+                field: date_key
       - name: snapshot_date
         description: "UTC date of the economics snapshot."
         tests:
@@ -745,25 +747,27 @@ models:
         tests:
           - not_null
           - relationships:
-              to: ref('dim_asset')
-              field: asset_sk
-
+              arguments:
+                to: ref('dim_asset')
+                field: asset_sk
       - name: news_source_sk
         description: "FK to dim_news_source.news_source_sk. Nullable if editor is unknown."
         tests:
           - relationships:
-              to: ref('dim_news_source')
-              field: news_source_sk
-              where: "news_source_sk is not null"
-
+              config:
+                where: "news_source_sk is not null"
+              arguments:
+                to: ref('dim_news_source')
+                field: news_source_sk
       - name: date_sk
         description: "FK to dim_date.date_key (YYYYMMDD) from published_at::date."
         tests:
           - relationships:
-              to: ref('dim_date')
-              field: date_key
-              where: "date_sk is not null"
-
+              config:
+                where: "date_sk is not null"
+              arguments:
+                to: ref('dim_date')
+                field: date_key
       - name: published_at
         description: "Article publication timestamp (UTC). Incremental watermark column."
         tests:
@@ -800,9 +804,9 @@ models:
         tests:
           - not_null
           - relationships:
-              to: ref('dim_asset')
-              field: asset_sk
-
+              arguments:
+                to: ref('dim_asset')
+                field: asset_sk
       - name: analysis_type_id
         description: >
           FK to dim_analysis_type.analysis_type_id. NOT NULL.
@@ -811,17 +815,17 @@ models:
         tests:
           - not_null
           - relationships:
-              to: ref('dim_analysis_type')
-              field: analysis_type_id
-
+              arguments:
+                to: ref('dim_analysis_type')
+                field: analysis_type_id
       - name: date_sk
         description: "FK to dim_date.date_key based on generated_date. NOT NULL."
         tests:
           - not_null
           - relationships:
-              to: ref('dim_date')
-              field: date_key
-
+              arguments:
+                to: ref('dim_date')
+                field: date_key
       - name: generated_date
         description: "UTC date when the AI analysis was generated. Part of grain. NOT NULL."
         tests:
@@ -879,29 +883,31 @@ models:
         tests:
           - not_null
           - relationships:
-              to: ref('dim_asset')
-              field: asset_sk
-
+              arguments:
+                to: ref('dim_asset')
+                field: asset_sk
       - name: event_type_id
         description: >
           FK to dim_event_type.event_type_id. Nullable — LEFT JOIN tolerant
           for unknown event types (row is kept with NULL type).
         tests:
           - relationships:
-              to: ref('dim_event_type')
-              field: event_type_id
-              where: "event_type_id is not null"
-
+              config:
+                where: "event_type_id is not null"
+              arguments:
+                to: ref('dim_event_type')
+                field: event_type_id
       - name: date_sk
         description: >
           FK to dim_date.date_key from event_date. Nullable — LEFT JOIN tolerant
           for NULL event_date or dates outside dim_date range.
         tests:
           - relationships:
-              to: ref('dim_date')
-              field: date_key
-              where: "date_sk is not null"
-
+              config:
+                where: "date_sk is not null"
+              arguments:
+                to: ref('dim_date')
+                field: date_key
       - name: event_date
         description: "Calendar date of the event. Nullable — some events have no confirmed date."
 
