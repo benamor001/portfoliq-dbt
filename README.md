@@ -18,8 +18,8 @@
 > See [portfoliq.io/methodology](https://portfoliq.io/methodology).
 
 [![API Status](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/portfoliq-io/portfolIQ/master/api/summary.json&label=API&style=flat)](https://status.portfoliq.io)
-[![CI syntax](https://github.com/<org>/portfoliq-dbt/actions/workflows/dbt-pack-ci.yml/badge.svg)](https://github.com/<org>/portfoliq-dbt/actions/workflows/dbt-pack-ci.yml)
-[![CI matrix Postgres+DuckDB](https://github.com/<org>/portfoliq-dbt/actions/workflows/dbt-package.yml/badge.svg)](https://github.com/<org>/portfoliq-dbt/actions/workflows/dbt-package.yml)
+[![CI syntax](https://github.com/benamor001/portfoliq-dbt/actions/workflows/dbt-pack-ci.yml/badge.svg)](https://github.com/benamor001/portfoliq-dbt/actions/workflows/dbt-pack-ci.yml)
+[![CI matrix Postgres+DuckDB](https://github.com/benamor001/portfoliq-dbt/actions/workflows/dbt-package.yml/badge.svg)](https://github.com/benamor001/portfoliq-dbt/actions/workflows/dbt-package.yml)
 [![License: ELv2](https://img.shields.io/badge/License-ELv2-blue.svg)](LICENSE)
 [![dbt](https://img.shields.io/badge/dbt-%3E%3D1.8-orange)](https://docs.getdbt.com)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-blue)](https://www.postgresql.org)
@@ -62,7 +62,7 @@ See **[README-duckdb.md](README-duckdb.md)** for the 5-command quick start.
 ```yaml
 # packages.yml
 packages:
-  - git: "https://github.com/<org>/portfoliq-dbt.git"
+  - git: "https://github.com/benamor001/portfoliq-dbt.git"
     revision: v0.2.0
 ```
 
@@ -93,7 +93,7 @@ Requires a portfolIQ Growth plan or above.
 
 ```yaml
 packages:
-  - git: "https://github.com/<org>/portfoliq-dbt.git"
+  - git: "https://github.com/benamor001/portfoliq-dbt.git"
     revision: v0.2.0
 ```
 
@@ -357,5 +357,5 @@ Internal use and derived analytics are permitted.
 - SQL access: [portfoliq.io/docs/get-started/sql-access](https://portfoliq.io/docs/get-started/sql-access)
 - API reference: [api.portfoliq.io/docs](https://api.portfoliq.io/docs)
 - Status: [status.portfoliq.io](https://status.portfoliq.io)
-- GitHub Issues: [github.com/<org>/portfoliq-dbt/issues](https://github.com/<org>/portfoliq-dbt/issues)
+- GitHub Issues: [github.com/benamor001/portfoliq-dbt/issues](https://github.com/benamor001/portfoliq-dbt/issues)
 - Email: hello@portfoliq.io

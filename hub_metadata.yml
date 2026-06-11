@@ -9,11 +9,11 @@ description: >
 maintainers:
   - name: portfolIQ
     email: hello@portfoliq.io
-    github: <org>
+    github: benamor001
 adapters:
   - postgres
 license: ELv2
-repository: https://github.com/<org>/portfoliq-dbt
+repository: https://github.com/benamor001/portfoliq-dbt
 documentation: https://portfoliq.io/docs/bi-package
 keywords:
   - crypto

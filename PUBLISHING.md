@@ -11,7 +11,7 @@ then tagging `v0.2.0`. No monorepo subtree, no special tooling.
 
 ## Prerequisites (Wael)
 
-- A GitHub account or org (placeholder `<org>` below — likely `benamor001`).
+- A GitHub account (repo is under `benamor001`).
 - `make` + `dbt` + `dbt-duckdb` installed locally (already present in this env).
 
 ---
@@ -34,7 +34,7 @@ Create a new **public** GitHub repo named `portfoliq-dbt` under your account/org
 No README / .gitignore / license from the GitHub UI — we push everything from here.
 
 ```bash
-gh repo create <org>/portfoliq-dbt --public \
+gh repo create benamor001/portfoliq-dbt --public \
   --description "portfolIQ dbt pack — Star Schema models for crypto financial data"
 ```
 
@@ -52,7 +52,7 @@ git init
 git add .
 git commit -m "feat: portfoliq-dbt v0.2.0 — crypto Star Schema consumer pack (ELv2)"
 git branch -M main
-git remote add origin git@github.com:<org>/portfoliq-dbt.git
+git remote add origin git@github.com:benamor001/portfoliq-dbt.git
 git push -u origin main
 ```
 
@@ -141,7 +141,7 @@ For data engineers building fintech apps who want analytics-ready models without
 reinventing the wheel. You point a read-only dbt profile at our published star_public
 schema and dbt build.
 
-- GitHub: https://github.com/<org>/portfoliq-dbt
+- GitHub: https://github.com/benamor001/portfoliq-dbt
 - Docs: https://portfoliq.io/docs/bi-package
 - 17 SQL models, 4 seeds, schema + singular tests, example queries
 - Queryable in plain SQL → works with any PostgreSQL-compatible BI tool (ODBC/JDBC):

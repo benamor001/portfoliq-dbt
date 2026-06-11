@@ -1,4 +1,4 @@
-# dbt Hub submission — `<org>/portfoliq-dbt`
+# dbt Hub submission — `benamor001/portfoliq-dbt`
 
 > Status: **not submitted.** Primary distribution is **git-install** (see README).
 > A dbt Hub listing is **optional and not guaranteed**: the package is licensed under
@@ -15,7 +15,7 @@
 | Licence | Elastic License v2 (ELv2) — non-OSI |
 | `require-dbt-version` | `[">=1.7.0", "<2.0.0"]` |
 | Adapters | postgres (primary), duckdb (local dev) |
-| Public repo (TBD by Wael) | `https://github.com/<org>/portfoliq-dbt` |
+| Public repo | `https://github.com/benamor001/portfoliq-dbt` |
 | Release tag | `v0.2.0` (to be created on the public repo) |
 
 ## Pre-flight checklist (state today)
@@ -33,7 +33,7 @@
 hubcap requires a public repo + a semver tag. Steps (only if pursuing Hub despite ELv2):
 
 1. Open a PR on [`dbt-labs/hubcap`](https://github.com/dbt-labs/hubcap) adding
-   `"<org>": ["portfoliq-dbt"]` to `hub.json`.
+   `"benamor001": ["portfoliq-dbt"]` to `hub.json`.
 2. A dbt Labs maintainer reviews. **Expect questions on the non-OSI ELv2 licence** —
    be ready to either accept rejection or relicense (we will NOT relicense to MIT/Apache:
    ELv2 is the moat per COMITE-010 cond. 8).
@@ -43,7 +43,7 @@ hubcap requires a public repo + a semver tag. Steps (only if pursuing Hub despit
 
 ```yaml
 packages:
-  - git: "https://github.com/<org>/portfoliq-dbt.git"
+  - git: "https://github.com/benamor001/portfoliq-dbt.git"
     revision: v0.2.0
 ```
 
