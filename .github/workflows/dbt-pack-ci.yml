@@ -20,5 +20,29 @@ jobs:
       - name: Install dbt + DuckDB adapter
         run: pip install dbt-core dbt-duckdb
 
+      # profiles.yml is intentionally gitignored (never ship a profile with
+      # potential credentials). Generate a secret-free DuckDB profile at CI time
+      # so `dbt parse` can resolve the package's profile reference.
+      - name: Generate CI DuckDB profile
+        run: |
+          cat > integration_tests/profiles.yml <<'YAML'
+          portfoliq_integration_tests:
+            target: ci
+            outputs:
+              ci:
+                type: duckdb
+                path: /tmp/portfoliq_integration_tests.duckdb
+                schema: star_public
+                threads: 4
+          portfoliq:
+            target: ci
+            outputs:
+              ci:
+                type: duckdb
+                path: /tmp/portfoliq_integration_tests.duckdb
+                schema: star_public
+                threads: 4
+          YAML
+
       - name: dbt deps + dbt parse (blank consumer project)
         run: make ci
