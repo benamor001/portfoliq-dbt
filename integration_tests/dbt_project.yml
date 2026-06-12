@@ -1,0 +1,38 @@
+# =============================================================================
+# integration_tests — a BLANK consumer project that installs the portfoliq
+# package from the parent directory and proves it resolves end-to-end.
+#
+# This is the test that closes finding B3: "operationally, the package installs."
+# It runs `dbt deps` (which copies the ../  package via local path) then
+# `dbt parse` against a DuckDB target — no real Postgres / star_public needed.
+#
+# Usage (from this directory):
+#   DBT_PROFILES_DIR=. dbt deps
+#   DBT_PROFILES_DIR=. dbt parse
+#
+# To prove the GIT install path that a real consumer will use, replace the
+# `local:` entry in packages.yml with the git URL + revision (see README).
+# =============================================================================
+
+name: 'portfoliq_integration_tests'
+version: '0.2.0'
+config-version: 2
+
+profile: 'portfoliq_integration_tests'
+
+# The package brings its own model/seed/macro paths. This wrapper project has
+# no models of its own — it only consumes `portfoliq`.
+model-paths:   ['models']
+seed-paths:    ['seeds']
+macro-paths:   ['macros']
+test-paths:    ['tests']
+analysis-paths: ['analyses']
+
+clean-targets:
+  - target
+  - dbt_packages
+
+# Pass the package's own vars through so its models compile.
+vars:
+  portfoliq_enable_star: true
+  portfoliq_database: ''

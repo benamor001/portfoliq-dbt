@@ -1,0 +1,12 @@
+# Install the portfoliq pack from the parent directory (local path) for CI.
+#
+# A real consumer installs it from git instead — swap the block below for:
+#
+#   packages:
+#     - git: "https://github.com/<org>/portfoliq-dbt.git"
+#       revision: v0.2.0
+#
+# Both resolve to the same models. The local path is used here so the test runs
+# without network access / before the public repo exists.
+packages:
+  - local: ../

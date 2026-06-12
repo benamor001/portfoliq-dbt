@@ -1,0 +1,109 @@
+name: 'portfoliq'
+version: '0.2.0'
+config-version: 2
+
+require-dbt-version: [">=1.7.0", "<2.0.0"]
+
+# Profile to use — clients copy profiles.yml.example → profiles.yml
+profile: 'portfoliq'
+
+model-paths:  ['models']
+seed-paths:   ['seeds']
+macro-paths:  ['macros']
+test-paths:   ['tests']
+analysis-paths: ['analyses']
+
+clean-targets: ['target', 'dbt_packages']
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Model configuration
+# All models default to view — they are pass-through reads on star_public schema.
+# portfoliq_enable_star: toggle to disable all models cleanly (returns empty sets).
+# ──────────────────────────────────────────────────────────────────────────────
+models:
+  portfoliq:
+    +materialized: view
+    +tags: ['portfoliq']
+
+    dimensions:
+      +tags: ['portfoliq', 'dimension']
+
+    facts:
+      +tags: ['portfoliq', 'fact']
+
+    satellites:
+      +tags: ['portfoliq', 'satellite']
+
+seeds:
+  portfoliq:
+    +schema: reference
+    dim_chain:
+      +column_types:
+        chain_id: text
+        chain_name: text
+        native_symbol: text
+        is_evm: boolean
+        is_l2: boolean
+        parent_chain_id: text
+    dim_event_type:
+      +column_types:
+        event_type_id: text
+        event_type_label: text
+        description: text
+        affects_price_typically: boolean
+    dim_analysis_type:
+      +column_types:
+        analysis_type_id: text
+        analysis_type_label: text
+        model_default: text
+        refresh_cadence: text
+        is_enabled: boolean
+    dim_tier:
+      +column_types:
+        tier: integer
+        tier_label: text
+        min_rank: integer
+        max_rank: integer
+        min_market_cap_usd_approx: bigint
+
+    # Demo seeds — synthetic data for DuckDB local dev + CI smoke tests (T-688)
+    # Legal: synthetic values only, not real market data. See seeds/schema.yml.
+    demo_assets:
+      +tags: ['demo']
+      +column_types:
+        asset_sk: integer
+        asset_id: text
+        ticker: text
+        name: text
+        tier: integer
+        contract_address: text
+        sources_confirmed: integer
+        single_source: boolean
+        methodology_version: text
+        valid_from: date
+        valid_to: date
+        is_current: boolean
+
+    demo_market_snapshots:
+      +tags: ['demo']
+      +column_types:
+        asset_sk: integer
+        asset_id: text
+        snapshot_date: date
+        date_key: integer
+        price_consensus_usd: double
+        supply_on_chain: bigint
+        market_cap_derived_usd: double
+        tier_crypto: integer
+        exchanges_count: integer
+        methodology_version: text
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Variables
+# portfoliq_enable_star: true  → normal operation (read from star_public)
+#                        false → all models return empty sets (safe disable)
+# portfoliq_database: override the database name if needed
+# ──────────────────────────────────────────────────────────────────────────────
+vars:
+  portfoliq_enable_star: true
+  portfoliq_database: ''

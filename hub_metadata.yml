@@ -1,0 +1,24 @@
+name: portfoliq
+version: 0.2.0
+description: >
+  portfolIQ dbt consumer pack — Star Schema dimensions, facts, and satellite
+  models for crypto financial data. Exposes portfolIQ's published star_public
+  schema (CoinGecko / DeFiLlama / FRED / ECB / on-chain) as analytics-ready dbt
+  views. Includes AI-generated enrichment columns (methodology disclosed). v0.2.0
+  is crypto-only; multi-asset is roadmap.
+maintainers:
+  - name: portfolIQ
+    email: hello@portfoliq.io
+    github: benamor001
+adapters:
+  - postgres
+license: ELv2
+repository: https://github.com/benamor001/portfoliq-dbt
+documentation: https://portfoliq.io/docs/bi-package
+keywords:
+  - crypto
+  - finance
+  - star-schema
+  - data-vault
+  - halal-screening
+  - timescaledb

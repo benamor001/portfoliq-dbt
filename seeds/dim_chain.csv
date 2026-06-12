@@ -1,0 +1,31 @@
+chain_id,chain_name,native_symbol,is_evm,is_l2,parent_chain_id
+bitcoin,Bitcoin,BTC,false,false,
+ethereum,Ethereum,ETH,true,false,
+bsc,BNB Smart Chain,BNB,true,false,
+polygon,Polygon,MATIC,true,false,ethereum
+arbitrum,Arbitrum One,ETH,true,true,ethereum
+optimism,Optimism,ETH,true,true,ethereum
+base,Base,ETH,true,true,ethereum
+zksync,zkSync Era,ETH,true,true,ethereum
+linea,Linea,ETH,true,true,ethereum
+scroll,Scroll,ETH,true,true,ethereum
+mantle,Mantle,MNT,true,true,ethereum
+starknet,Starknet,ETH,false,true,ethereum
+avalanche,Avalanche C-Chain,AVAX,true,false,
+solana,Solana,SOL,false,false,
+tron,Tron,TRX,true,false,
+fantom,Fantom Opera,FTM,true,false,
+gnosis,Gnosis Chain,xDAI,true,false,ethereum
+celo,Celo,CELO,true,false,
+moonbeam,Moonbeam,GLMR,true,false,
+near,NEAR Protocol,NEAR,false,false,
+cosmos,Cosmos Hub,ATOM,false,false,
+algorand,Algorand,ALGO,false,false,
+cardano,Cardano,ADA,false,false,
+polkadot,Polkadot,DOT,false,false,
+litecoin,Litecoin,LTC,false,false,
+ripple,XRP Ledger,XRP,false,false,
+stellar,Stellar,XLM,false,false,
+filecoin,Filecoin,FIL,false,false,
+hedera,Hedera,HBAR,false,false,
+ton,The Open Network,TON,false,false
