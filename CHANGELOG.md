@@ -15,6 +15,23 @@ Format: [Semantic Versioning](https://semver.org/). Unreleased changes are stage
 
 ---
 
+## Unreleased
+
+### Changed — compliance scrub (D-166 / AMF-001)
+
+- **No compliance verdict is ever exposed by this package.** The cross-asset and
+  example screening queries (`06`, `07`, `08`, `09`, `19`) were rewritten to remove
+  all `is_halal_aaoifi` / `sharia_purification_ratio` / `aaoifi_verdict` columns and
+  every per-standard pass/fail (`*_screen_pass`, `preliminary_halal_pass`,
+  `standards_agreement`). They now expose **raw screening inputs only** (leverage
+  ratios, market data). Applying any threshold and reaching a verdict is the
+  consumer's responsibility (e.g. HalalStack, the screening sovereign).
+  Those `is_halal_*` columns also never existed in the shipped `dim_asset` view, so
+  the previous queries were both a legal exposure and broken drift.
+- `hub_metadata.yml` keyword `halal-screening` → `screening-inputs`.
+
+---
+
 ## What actually shipped in v0.2.0 (authoritative)
 
 - **Dimensions (views):** `dim_asset` (SCD2), `dim_date`, `dim_news_source`.
@@ -70,7 +87,7 @@ Format: [Semantic Versioning](https://semver.org/). Unreleased changes are stage
 
 **Documentation and tooling**
 - 13 new dbt tests (range, Pearson symmetry, ETF weight sum 95-105%, vintage anti-lookahead, SEC accession_number unique, hub_asset hash collision check, relationships across all new facts).
-- 20 SQL example queries in `queries/cross-asset/` covering correlations, halal screening (AAOIFI, DJIM, Wahed), polymorphic pricing, macro regimes, ETF concentration (HHI), and data lineage audit.
+- 20 SQL example queries in `queries/cross-asset/` covering correlations, raw screening inputs (leverage ratios — no verdict, see D-166 scrub above), polymorphic pricing, macro regimes, ETF concentration (HHI), and data lineage audit.
 - CI smoke script `scripts/ci_dbt_smoke.sh` — idempotent end-to-end test: parse → compile → seed → run v0.1 → test v0.1 → run v0.2 → test v0.2.
 - GitHub Actions workflow `.github/workflows/dbt-smoke.yml` — runs on push to `main` (paths: `dbt/**`) and `workflow_dispatch`.
 - Release workflow `.github/workflows/dbt-release.yml` — smoke gate → subtree push → tag.

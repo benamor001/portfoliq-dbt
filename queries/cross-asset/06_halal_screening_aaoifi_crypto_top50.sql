@@ -1,10 +1,15 @@
 -- ============================================================
--- portfoliq-dbt v0.2.0 — Query 06: Top 50 Crypto — AAOIFI Halal Screening + Purification Ratio
+-- portfoliq-dbt — Query 06: Top 50 Crypto by Market Cap (consensus-derived)
 -- Requires: (no enable_* var — crypto is default)
 -- Source tables: marts.dim_asset, marts.fact_market_snapshot
 -- Disclaimer: Not financial advice. Methodology disclosed.
---   Halal classification is based on disclosed methodology only.
---   Not a fatwa. Consult a qualified Islamic finance scholar for rulings.
+--
+-- D-166 / AMF-001 — IMPORTANT (this is a PUBLIC package):
+--   portfolIQ does NOT serve a halal / Sharia-compliance VERDICT, nor any
+--   `is_halal_*` boolean. The screening verdict is sovereign to downstream
+--   consumers (e.g. HalalStack). This query therefore exposes market data only.
+--   Purification ratios (AAOIFI SS-21 methodological inputs) are served via the
+--   dedicated purification endpoint, not via dim_asset. Not a fatwa.
 -- ============================================================
 
 WITH latest_snapshot AS (
@@ -32,23 +37,6 @@ SELECT
     da.ticker,
     da.name,
     da.tier                                               AS portfoliq_tier,
-    -- Halal attributes from dim_asset (populated by sat_asset_halal)
-    da.is_halal_aaoifi,
-    da.halal_aaoifi_score,
-    da.sharia_purification_ratio,
-    -- Interpretation per AAOIFI standard
-    CASE
-        WHEN da.is_halal_aaoifi = true  THEN 'Permissible'
-        WHEN da.is_halal_aaoifi = false THEN 'Not Permissible'
-        ELSE 'Pending Review'
-    END                                                   AS aaoifi_verdict,
-    -- Purification guidance (round up to nearest cent)
-    CASE
-        WHEN da.sharia_purification_ratio IS NOT NULL
-         AND da.sharia_purification_ratio > 0
-             THEN ROUND((r.price_consensus_usd * da.sharia_purification_ratio)::numeric, 4)
-        ELSE NULL
-    END                                                   AS purification_per_token_usd,
     r.market_cap_derived_usd,
     r.price_consensus_usd,
     r.snapshot_date

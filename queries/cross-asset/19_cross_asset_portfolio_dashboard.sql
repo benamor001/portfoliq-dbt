@@ -1,7 +1,7 @@
 -- ============================================================
 -- portfoliq-dbt v0.2.0 — Query 19: Cross-Asset Portfolio Dashboard (Fictitious)
 --   5 assets: BTC (crypto) + AAPL (stock) + SPY (etf) + XAUUSD (commodity) + FEDFUNDS (macro)
---   Combines: prices + correlations + halal + AI analysis
+--   Combines: prices + correlations + AI analysis
 -- Requires: enable_stocks = true, enable_etf = true, enable_commodities = true,
 --           enable_macro = true
 -- Source tables: marts.fact_market_price, marts.fact_market_correlation,
@@ -9,6 +9,7 @@
 --               marts.dim_asset, marts.dim_asset_kind
 -- Disclaimer: Not financial advice. Methodology disclosed.
 --   This is a demonstration portfolio only. Not a managed portfolio recommendation.
+--   D-166 / AMF-001: no halal/compliance VERDICT is exposed by portfolIQ.
 -- ============================================================
 
 -- SECTION 1: Portfolio composition and latest prices
@@ -18,8 +19,6 @@ WITH portfolio_assets AS (
         da.ticker,
         da.name,
         da.asset_kind,
-        da.is_halal_aaoifi,
-        da.sharia_purification_ratio,
         dak.label           AS asset_kind_label,
         dak.sort_order
     FROM marts.dim_asset da
@@ -91,9 +90,6 @@ SELECT
     COALESCE(lp.snapshot_date, fr.observation_date)        AS value_date,
     lp.timeframe,
     lp.venues_count                                        AS consensus_venues,
-    -- Halal block
-    pa.is_halal_aaoifi,
-    ROUND(pa.sharia_purification_ratio::numeric, 4)        AS purification_ratio,
     -- AI block
     ai.sentiment_label,
     ROUND(ai.sentiment_score::numeric, 3)                  AS sentiment_score,

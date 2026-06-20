@@ -1,11 +1,15 @@
 -- ============================================================
--- portfoliq-dbt v0.2.0 — Query 07: US Stocks — DJIM Screening Inputs
---   (debt/market_cap + haram_revenue_ratio)
+-- portfoliq-dbt — Query 07: US Stocks — Leverage Screening Input (debt / market cap)
 -- Requires: enable_stocks = true
 -- Source tables: marts.fact_stock_fundamentals, marts.fact_market_price, marts.dim_asset
 -- Disclaimer: Not financial advice. Methodology disclosed.
---   PIQ provides raw financial inputs only. The DJIM verdict is calculated
---   client-side per D-070 §2. Not a fatwa.
+--
+-- D-166 / AMF-001 — IMPORTANT (this is a PUBLIC package):
+--   portfolIQ provides RAW financial inputs only (here: a debt-to-market-cap
+--   ratio from SEC filings + consensus price). It does NOT serve any compliance
+--   VERDICT or per-threshold pass/fail. Applying the DJIM 33% (or any) threshold
+--   and reaching a verdict is the consumer's responsibility (e.g. HalalStack).
+--   Not a fatwa.
 -- ============================================================
 
 WITH latest_fundamentals AS (
@@ -53,19 +57,6 @@ djim_inputs AS (
                  THEN lf.total_debt_usd / (lp.latest_close_usd * lf.shares_outstanding)
             ELSE NULL
         END                                            AS debt_to_market_cap,
-        -- DJIM threshold: <33% debt/market_cap
-        CASE
-            WHEN lf.total_debt_usd / NULLIF(lp.latest_close_usd * lf.shares_outstanding, 0) < 0.33
-                 THEN true
-            ELSE false
-        END                                            AS djim_debt_screen_pass,
-        -- Halal revenue ratio from dim_asset (portfolIQ-provided attribute)
-        da.haram_revenue_ratio,
-        -- DJIM threshold: <5% haram revenue
-        CASE
-            WHEN da.haram_revenue_ratio < 0.05 THEN true
-            ELSE false
-        END                                            AS djim_revenue_screen_pass,
         lf.period_end_date                             AS filing_date,
         lp.snapshot_date                               AS price_date,
         lf.accession_number
@@ -81,11 +72,6 @@ SELECT
     ROUND(market_cap_usd::numeric / 1e9, 2)         AS market_cap_bn_usd,
     ROUND(total_debt_usd::numeric / 1e9, 2)         AS total_debt_bn_usd,
     ROUND(debt_to_market_cap::numeric, 4)            AS debt_to_mktcap_ratio,
-    djim_debt_screen_pass,
-    ROUND(haram_revenue_ratio::numeric, 4)           AS haram_revenue_ratio,
-    djim_revenue_screen_pass,
-    -- Combined DJIM pre-screen (financial ratios only; business activity screening separate)
-    (djim_debt_screen_pass AND djim_revenue_screen_pass) AS djim_financial_prescreen_pass,
     filing_date,
     price_date,
     accession_number                                  -- SEC traceability

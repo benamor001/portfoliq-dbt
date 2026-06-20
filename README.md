@@ -267,19 +267,24 @@ A first-class Power BI template and a Cube wrapper are on the [Roadmap](#roadmap
 
 See [`queries/cross-asset/`](queries/cross-asset/) for ready-to-use queries.
 
-> **Scope note:** some example queries (cross-asset correlations, stock DJIM inputs,
+> **Scope note:** some example queries (cross-asset correlations, stock leverage inputs,
 > macro regimes, polymorphic `fact_market_price`) target **roadmap** models/data that
 > are not part of the v0.2.0 crypto pack. They are shipped as reference patterns; the
-> crypto-only examples (e.g. AAOIFI top-50 screening, market snapshots) run today.
+> crypto-only examples (e.g. top-50 market snapshots) run today.
+>
+> **Compliance note (D-166 / AMF-001):** portfolIQ never exposes a halal/Sharia
+> compliance **verdict**, an `is_halal_*` boolean, or a per-standard pass/fail. The
+> screening queries below expose **raw inputs only** (leverage ratios, market data);
+> any verdict is computed downstream by the consumer (e.g. HalalStack).
 
 | File | Description |
 |---|---|
 | `01_btc_sp500_correlation_252d.sql` | BTC vs SPY rolling 252d Pearson correlation |
 | `02_gold_btc_correlation_regimes.sql` | Gold vs BTC by FEDFUNDS rate regime |
 | `03_top10_crypto_stock_correlation_matrix.sql` | Top 10 crypto × top 10 stocks matrix |
-| `06_halal_screening_aaoifi_crypto_top50.sql` | Top 50 crypto AAOIFI screening |
-| `07_halal_screening_djim_inputs_stocks.sql` | US stocks DJIM ratio inputs |
-| `09_multi_standard_comparison.sql` | AAOIFI vs DJIM vs Wahed comparison |
+| `06_halal_screening_aaoifi_crypto_top50.sql` | Top 50 crypto by market cap (no verdict) |
+| `07_halal_screening_djim_inputs_stocks.sql` | US stocks leverage ratio input (raw, no verdict) |
+| `09_multi_standard_comparison.sql` | Screening leverage inputs (raw, no verdict) |
 | `10_fact_market_price_all_kinds.sql` | Polymorphic price: all 5 asset kinds |
 | `13_macro_regime_classification.sql` | FRED macro regime: expansion/overheating |
 | `19_cross_asset_portfolio_dashboard.sql` | Full portfolio dashboard (5 assets, 4 facts) |
