@@ -91,9 +91,9 @@ seeds:
         asset_id: text
         snapshot_date: date
         date_key: integer
-        price_consensus_usd: double
+        price_consensus_usd: double precision
         supply_on_chain: bigint
-        market_cap_derived_usd: double
+        market_cap_derived_usd: double precision
         tier_crypto: integer
         exchanges_count: integer
         methodology_version: text
