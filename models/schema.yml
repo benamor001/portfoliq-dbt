@@ -540,13 +540,13 @@ models:
       Star Schema fact view — P/S and P/R valuation ratios for DeFi assets.
       Grain: (asset_sk, snapshot_date). Source: DeFiLlama (MIT licence) + VWAP-derived market cap.
       Only assets with a DeFiLlama link are covered. Gate: fundamentals:read (Growth tier+).
-      DISCLAIMER: Factual valuation metrics only. Not financial advice. Not a fatwa.
+      DISCLAIMER: Factual valuation metrics only. Not financial advice.
       Ref: COMITE-010, Sprint 18A T-239.
     config:
       meta:
         exposure: public_recomputed
         public_doc: true
-        disclaimer: "Factual valuation metrics only. Not financial advice. Not a fatwa. Methodology disclosed."
+        disclaimer: "Factual valuation metrics only. Not financial advice. Methodology disclosed."
     tests:
       - dbt_utils.unique_combination_of_columns:
           arguments:
@@ -719,13 +719,13 @@ models:
       Star Schema incremental fact — news article x mentioned asset pairs.
       Grain: (article_hk, asset_sk). tokens_mentioned[] UNNESTed — 1 article x N tokens = N rows.
       Token-to-asset mapping via NER (news_ner_v1, Claude Haiku 4.5).
-      DISCLAIMER: Not financial advice. Not a fatwa. Methodology disclosed.
+      DISCLAIMER: Not financial advice. Methodology disclosed.
       Ref: COMITE-010, Sprint 18B T-243.
     config:
       meta:
         exposure: public_recomputed
         public_doc: true
-        disclaimer: "Not financial advice. Not a fatwa. Methodology disclosed."
+        disclaimer: "Not financial advice. Methodology disclosed."
     tests:
       - dbt_utils.unique_combination_of_columns:
           arguments:

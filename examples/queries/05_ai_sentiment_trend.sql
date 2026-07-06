@@ -8,7 +8,7 @@
 -- Suggested BI tool: Power BI (line chart with annotations)
 -- Tables: star_public.fact_ai_analysis, star_public.dim_asset
 -- Filters: asset ticker + generated_date last 30 days + analysis_type = sentiment_score
--- Not financial advice. Not a fatwa. Methodology disclosed.
+-- Not financial advice. Methodology disclosed.
 -- ============================================================
 
 -- Replace 'BTC' with any ticker available in dim_asset.

@@ -10,7 +10,7 @@
 -- Tables: star_public.fact_protocol_tvl,
 --         portfoliq_reference.dim_chain (seed — chain metadata)
 -- Filters: snapshot_date = yesterday (prevents full scan)
--- Not financial advice. Not a fatwa. Methodology disclosed.
+-- Not financial advice. Methodology disclosed.
 -- ============================================================
 
 -- NOTE: fact_protocol_tvl.chains stores chain names as a text field.

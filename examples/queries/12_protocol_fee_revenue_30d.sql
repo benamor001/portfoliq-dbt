@@ -9,7 +9,7 @@
 -- Suggested BI tool: Tableau (sorted bar chart), Power BI
 -- Tables: star_public.fact_protocol_economics
 -- Filters: snapshot_date range last 30 days (prevents full scan)
--- Not financial advice. Not a fatwa. Methodology disclosed.
+-- Not financial advice. Methodology disclosed.
 -- ============================================================
 
 SELECT

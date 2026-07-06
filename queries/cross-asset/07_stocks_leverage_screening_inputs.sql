@@ -8,8 +8,7 @@
 --   portfolIQ provides RAW financial inputs only (here: a debt-to-market-cap
 --   ratio from SEC filings + consensus price). It does NOT serve any compliance
 --   VERDICT or per-threshold pass/fail. Applying the DJIM 33% (or any) threshold
---   and reaching a verdict is the consumer's responsibility (e.g. HalalStack).
---   Not a fatwa.
+--   and reaching a verdict is the consumer's responsibility.
 -- ============================================================
 
 WITH latest_fundamentals AS (

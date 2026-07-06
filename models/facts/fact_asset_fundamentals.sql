@@ -9,7 +9,7 @@
 -- Gate: fundamentals:read (Growth tier+).
 --
 -- Legal  : DeFiLlama: MIT licence. Factual valuation metrics only.
---          Not financial advice. Not a fatwa. Methodology disclosed.
+--          Not financial advice. Methodology disclosed.
 -- Licence: ELv2 — see NOTICE.md
 -- =============================================================================
 

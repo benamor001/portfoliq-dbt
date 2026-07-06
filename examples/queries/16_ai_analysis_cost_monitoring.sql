@@ -9,7 +9,7 @@
 -- Suggested BI tool: Metabase (admin monitoring dashboard)
 -- Tables: star_public.fact_ai_analysis, star_public.dim_analysis_type
 -- Filters: generated_date range last 30 days (prevents full scan)
--- Not financial advice. Not a fatwa. Methodology disclosed.
+-- Not financial advice. Methodology disclosed.
 -- ============================================================
 
 SELECT

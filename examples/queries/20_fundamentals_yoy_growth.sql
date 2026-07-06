@@ -9,7 +9,7 @@
 -- Suggested BI tool: Any (KPI cards, growth table)
 -- Tables: star_public.fact_protocol_economics
 -- Filters: snapshot_date IN (yesterday, D-365) — two point-in-time queries
--- Not financial advice. Not a fatwa. Methodology disclosed.
+-- Not financial advice. Methodology disclosed.
 -- ============================================================
 
 WITH current_period AS (

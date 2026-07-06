@@ -9,7 +9,7 @@
 -- Tables: star_public.fact_news_mention, star_public.dim_asset,
 --         star_public.dim_news_source
 -- Filters: asset ticker = 'BTC' + published_at last 30 days
--- Not financial advice. Not a fatwa. Methodology disclosed.
+-- Not financial advice. Methodology disclosed.
 -- ============================================================
 
 -- Replace 'BTC' with any ticker available in dim_asset.

@@ -3,14 +3,13 @@
 --   Debt / market-cap input, computed from public fundamentals + consensus price.
 -- Requires: enable_stocks = true (for stock inputs)
 -- Source tables: marts.dim_asset, marts.fact_stock_fundamentals, marts.fact_market_price
--- Disclaimer: Not financial advice. Methodology disclosed. Not a fatwa.
 --
 -- D-166 / AMF-001 — IMPORTANT (this is a PUBLIC package):
 --   portfolIQ provides RAW screening INPUTS only (here: a leverage ratio derived
 --   from public filings + consensus price). It does NOT serve any compliance
---   VERDICT, `is_halal_*` boolean, per-standard pass/fail, or cross-standard
---   "agreement" judgment. Applying a threshold (AAOIFI / DJIM 33% / Wahed) and
---   reaching a verdict is the consumer's responsibility (e.g. HalalStack).
+--   VERDICT, compliance boolean, per-standard pass/fail, or cross-standard
+--   "agreement" judgment. Applying a published screening standard's threshold and
+--   reaching a verdict is the consumer's responsibility.
 -- ============================================================
 
 WITH target_assets AS (

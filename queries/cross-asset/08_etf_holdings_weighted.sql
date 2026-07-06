@@ -2,12 +2,11 @@
 -- portfoliq-dbt — Query 08: ETF Holdings — Universe Coverage by Weight
 -- Requires: enable_etf = true, enable_stocks = true (for constituent mapping)
 -- Source tables: marts.fact_etf_holdings, marts.dim_asset
--- Disclaimer: Not financial advice. Methodology disclosed. Not a fatwa.
 --
 -- D-166 / AMF-001 — IMPORTANT (this is a PUBLIC package):
---   portfolIQ does NOT serve a halal / Sharia-compliance VERDICT, nor any
---   `is_halal_*` boolean, nor an aggregated "halal weight %" or pass/fail. The
---   screening verdict is sovereign to downstream consumers (e.g. HalalStack).
+--   portfolIQ does NOT serve a religious- or ethics-compliance VERDICT, nor any
+--   compliance boolean, nor an aggregated compliance-weight % or pass/fail. The
+--   screening verdict is sovereign to downstream consumers (screening stays consumer-side).
 --   This query reports only how much of an ETF's weight maps to the portfolIQ
 --   asset universe — a data-coverage metric, NOT a compliance judgment.
 -- ============================================================

@@ -165,7 +165,7 @@ sources:
         description: >
           Star Schema incremental fact — news article x asset mention pairs.
           Grain: (article_hk, asset_sk). tokens_mentioned UNNESTed.
-          DISCLAIMER: Not financial advice. Not a fatwa. Methodology disclosed.
+          DISCLAIMER: Not financial advice. Methodology disclosed.
 
       - name: fact_ai_analysis
         description: >

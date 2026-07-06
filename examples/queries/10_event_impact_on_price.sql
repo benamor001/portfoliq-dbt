@@ -10,7 +10,7 @@
 -- Tables: star_public.fact_event, star_public.dim_asset,
 --         star_public.dim_event_type, star_public.fact_market_snapshot
 -- Filters: asset ticker = 'BTC' + event_date last 365 days
--- Not financial advice. Not a fatwa. Methodology disclosed.
+-- Not financial advice. Methodology disclosed.
 -- ============================================================
 
 -- Replace 'BTC' with any ticker available in dim_asset.

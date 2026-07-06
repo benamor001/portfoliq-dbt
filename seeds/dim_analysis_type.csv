@@ -6,7 +6,7 @@ news_summary,News Summary,claude-haiku-4-5,trigger_new_news,true
 sentiment_score,Sentiment Score,claude-haiku-4-5,trigger_price_move,true
 event_extraction,Event Extraction,claude-haiku-4-5,on_event,true
 news_ner_v1,News NER v1,claude-haiku-4-5,trigger_new_news,true
-halal_screening,Halal Screening,,,false
 reserved_01,Reserved 01,,,false
 reserved_02,Reserved 02,,,false
 reserved_03,Reserved 03,,,false
+reserved_04,Reserved 04,,,false

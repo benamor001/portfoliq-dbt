@@ -8,7 +8,7 @@
 -- Incremental in source (delete+insert on published_at window).
 --
 -- Legal  : coingecko_id_token excluded (CoinGecko ToS §6.2).
---          Not financial advice. Not a fatwa. Methodology disclosed.
+--          Not financial advice. Methodology disclosed.
 -- Licence: ELv2 — see NOTICE.md
 -- =============================================================================
 

@@ -5,11 +5,10 @@
 -- Disclaimer: Not financial advice. Methodology disclosed.
 --
 -- D-166 / AMF-001 — IMPORTANT (this is a PUBLIC package):
---   portfolIQ does NOT serve a halal / Sharia-compliance VERDICT, nor any
---   `is_halal_*` boolean. The screening verdict is sovereign to downstream
---   consumers (e.g. HalalStack). This query therefore exposes market data only.
---   Purification ratios (AAOIFI SS-21 methodological inputs) are served via the
---   dedicated purification endpoint, not via dim_asset. Not a fatwa.
+--   portfolIQ does NOT serve a religious- or ethics-compliance VERDICT, nor any
+--   compliance boolean. The screening verdict is sovereign to downstream
+--   consumers (screening stays consumer-side). This query therefore exposes market data only.
+--   Purification ratios (methodological inputs, standard disclosed at portfoliq.io/methodology) are served via the
 -- ============================================================
 
 WITH latest_snapshot AS (

@@ -7,7 +7,7 @@
 -- Suggested BI tool: Any (table / bar chart)
 -- Tables: star_public.fact_market_snapshot, star_public.dim_asset
 -- Filters: snapshot_date = CURRENT_DATE - 1 day (no full scan)
--- Not financial advice. Not a fatwa. Methodology disclosed.
+-- Not financial advice. Methodology disclosed.
 -- ============================================================
 
 SELECT

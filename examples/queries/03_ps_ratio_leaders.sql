@@ -8,7 +8,7 @@
 -- Suggested BI tool: Tableau (sorted bar chart), Metabase
 -- Tables: star_public.fact_asset_fundamentals, star_public.dim_asset
 -- Filters: snapshot_date = yesterday + tier IN (1, 2) + ps_ratio IS NOT NULL
--- Not financial advice. Not a fatwa. Methodology disclosed.
+-- Not financial advice. Methodology disclosed.
 -- ============================================================
 
 SELECT

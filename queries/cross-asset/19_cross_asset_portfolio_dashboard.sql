@@ -9,7 +9,7 @@
 --               marts.dim_asset, marts.dim_asset_kind
 -- Disclaimer: Not financial advice. Methodology disclosed.
 --   This is a demonstration portfolio only. Not a managed portfolio recommendation.
---   D-166 / AMF-001: no halal/compliance VERDICT is exposed by portfolIQ.
+--   D-166 / AMF-001: no compliance VERDICT is exposed by portfolIQ.
 -- ============================================================
 
 -- SECTION 1: Portfolio composition and latest prices

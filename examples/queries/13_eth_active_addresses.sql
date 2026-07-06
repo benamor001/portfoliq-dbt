@@ -9,7 +9,7 @@
 -- Suggested BI tool: Power BI (area chart), Metabase
 -- Tables: star_public.fact_onchain_core, star_public.dim_asset
 -- Filters: asset ticker = 'ETH' + date range last 90 days
--- Not financial advice. Not a fatwa. Methodology disclosed.
+-- Not financial advice. Methodology disclosed.
 -- ============================================================
 
 SELECT

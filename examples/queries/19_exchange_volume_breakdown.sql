@@ -10,7 +10,7 @@
 -- Suggested BI tool: Power BI (table + conditional formatting), Tableau
 -- Tables: star_public.fact_vwap_consensus, star_public.dim_asset
 -- Filters: asset ticker = 'BTC' + date range last 7 days + timeframe = '1h'
--- Not financial advice. Not a fatwa. Methodology disclosed.
+-- Not financial advice. Methodology disclosed.
 -- ============================================================
 
 -- Replace 'BTC' with any Tier 1 ticker. Use timeframe = '1d' for all tiers.

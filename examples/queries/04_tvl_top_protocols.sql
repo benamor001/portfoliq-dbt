@@ -9,7 +9,7 @@
 -- Suggested BI tool: Metabase (table), Tableau (bar chart)
 -- Tables: star_public.fact_protocol_tvl
 -- Filters: snapshot_date = yesterday (prevents full scan)
--- Not financial advice. Not a fatwa. Methodology disclosed.
+-- Not financial advice. Methodology disclosed.
 -- ============================================================
 
 SELECT

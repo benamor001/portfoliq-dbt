@@ -6,10 +6,10 @@
 --   any compliance filter is applied downstream by the consumer.
 --
 -- D-166 / AMF-001 — IMPORTANT (this is a PUBLIC package):
---   portfolIQ does NOT serve a halal / Sharia-compliance VERDICT, nor an
---   `is_halal_*` boolean. The screening verdict is sovereign to downstream
---   consumers (e.g. HalalStack). This example exposes market data only.
---   Not financial advice. Not a fatwa. Methodology disclosed.
+--   portfolIQ does NOT serve a religious- or ethics-compliance VERDICT, nor an
+--   compliance boolean. The screening verdict is sovereign to downstream
+--   consumers (screening stays consumer-side). This example exposes market data only.
+--   Not financial advice. Methodology disclosed.
 --
 -- Suggested BI tool: Any (filtered table, card KPIs)
 -- Tables: star_public.dim_asset, star_public.fact_market_snapshot

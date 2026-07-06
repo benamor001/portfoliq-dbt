@@ -15,7 +15,13 @@ Format: [Semantic Versioning](https://semver.org/). Unreleased changes are stage
 
 ---
 
-## [0.2.1] — 2026-07-06
+## [0.3.1] — 2026-07-06
+
+> **Version reconciliation.** The public mirror received a direct `v0.3.0` push on
+> 2026-06-14 ("realign with portfolIQ schema + remove halal surface") that was never
+> backported to the source monorepo. This release re-synchronises the two histories:
+> it contains everything the 0.3.0 mirror push had, plus the fixes below. Versions
+> jump from 0.2.0 to 0.3.1 in this changelog for that reason.
 
 ### Fixed
 
@@ -30,11 +36,21 @@ Format: [Semantic Versioning](https://semver.org/). Unreleased changes are stage
   all `is_halal_aaoifi` / `sharia_purification_ratio` / `aaoifi_verdict` columns and
   every per-standard pass/fail (`*_screen_pass`, `preliminary_halal_pass`,
   `standards_agreement`). They now expose **raw screening inputs only** (leverage
-  ratios, market data). Applying any threshold and reaching a verdict is the
-  consumer's responsibility (e.g. HalalStack, the screening sovereign).
+  ratios, market data). Applying any threshold and reaching a verdict stays the
+  downstream consumer's responsibility.
   Those `is_halal_*` columns also never existed in the shipped `dim_asset` view, so
   the previous queries were both a legal exposure and broken drift.
 - `hub_metadata.yml` keyword `halal-screening` → `screening-inputs`.
+- Query files renamed to neutral, input-oriented names:
+  `06_halal_screening_aaoifi_crypto_top50.sql` → `06_crypto_top50_screening_inputs.sql`,
+  `07_halal_screening_djim_inputs_stocks.sql` → `07_stocks_leverage_screening_inputs.sql`,
+  `08_halal_etf_holdings_weighted.sql` → `08_etf_holdings_weighted.sql`,
+  `examples/queries/08_halal_assets_filter.sql` → `08_assets_universe_snapshot.sql`.
+- `dim_analysis_type` seed: the disabled `halal_screening` placeholder row replaced by
+  `reserved_04` (aligns with the 0.3.0 mirror state; row was `is_enabled=false`,
+  referenced by no model).
+- All in-file disclaimers and headers rewritten with neutral compliance wording
+  (no religious framing, no partner naming) — content unchanged in substance.
 
 ---
 
@@ -69,7 +85,7 @@ Format: [Semantic Versioning](https://semver.org/). Unreleased changes are stage
 - `fact_market_correlation` — cross-asset rolling Pearson correlation (30d/90d/252d windows). Always active (no var gate). Grain: `(asset_sk_a, asset_sk_b, window_days, snapshot_date)`.
 
 **New satellite models**
-- `sat_asset_classification` — unified classification Sat (GICS sector, halal attributes) for all asset kinds. Always active.
+- `sat_asset_classification` — unified classification Sat (GICS sector, screening attributes) for all asset kinds. Always active.
 - `sat_macro_observation` — raw macro time-series from FRED + ECB SDW. Gated `enable_macro`.
 - `sat_stock_fundamentals` — XBRL parsed annual/quarterly fundamentals. Gated `enable_stocks`. Exposure: `public`.
 - `sat_stock_ohlcv` — raw Tiingo/AV OHLCV. Gated `enable_stocks`. Exposure: `internal_only` (redistribution forbidden).

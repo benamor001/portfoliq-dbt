@@ -10,7 +10,7 @@
 -- Tables: star_public.fact_market_snapshot, star_public.dim_date,
 --         star_public.dim_asset
 -- Filters: asset ticker = 'BTC' + date range last 30 days
--- Not financial advice. Not a fatwa. Methodology disclosed.
+-- Not financial advice. Methodology disclosed.
 -- ============================================================
 
 -- Replace 'BTC' with any ticker available in dim_asset.

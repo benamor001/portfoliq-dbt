@@ -8,7 +8,7 @@
 -- Suggested BI tool: Power BI (matrix table / heatmap)
 -- Tables: star_public.fact_market_snapshot, star_public.dim_asset
 -- Filters: tier = 1 + snapshot_date range last 30 days
--- Not financial advice. Not a fatwa. Methodology disclosed.
+-- Not financial advice. Methodology disclosed.
 -- ============================================================
 
 SELECT

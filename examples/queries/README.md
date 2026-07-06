@@ -6,7 +6,7 @@ Copy and paste into your BI tool, psql, or notebook.
 All queries target `star_public.*` tables directly (no `{{ ref() }}` — these are
 standalone examples for end users, not dbt models).
 
-> Not financial advice. Not a fatwa. Methodology disclosed at portfoliq.io/methodology.
+> Not financial advice. Methodology disclosed at portfoliq.io/methodology.
 
 ---
 
@@ -21,7 +21,7 @@ standalone examples for end users, not dbt models).
 | 05 | `05_ai_sentiment_trend.sql` | AI Sentiment Trend for a Given Asset (Last 30 Days) | Power BI |
 | 06 | `06_onchain_nvt_ratio.sql` | Bitcoin NVT Ratio (Last 90 Days) — On-Chain Valuation Proxy | Any |
 | 07 | `07_vwap_vs_market_price.sql` | VWAP Consensus vs Spot Price Divergence (Last 7 Days) | Tableau, Power BI |
-| 08 | `08_halal_assets_filter.sql` | Halal-Classified Assets with Market Data (Latest Snapshot) | Any |
+| 08 | `08_assets_universe_snapshot.sql` | Asset Universe with Market Data (Latest Snapshot) | Any |
 | 09 | `09_tier1_assets_daily.sql` | Tier 1 Assets Daily Snapshot (Last 30 Days) | Power BI |
 | 10 | `10_event_impact_on_price.sql` | Crypto Events and Price Change in the Following 7 Days | Tableau |
 | 11 | `11_news_mention_frequency.sql` | News Mention Frequency by Source for a Given Asset (Last 30 Days) | Metabase, Lightdash |
@@ -63,5 +63,5 @@ Date ranges use `CURRENT_DATE - INTERVAL '...'` — no hardcoded dates.
 
 - Data sourced from portfolIQ pipelines. Derived data is redistributable.
 - CoinGecko nominal prices are **never** exposed (ToS §6.2 compliance).
-- Not financial advice. Not a fatwa. Not a sharia ruling.
+- Not financial advice.
 - Methodology: portfoliq.io/methodology

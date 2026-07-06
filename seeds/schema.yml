@@ -94,7 +94,7 @@ seeds:
     description: >
       Static dimension — AI analysis type reference table (11 rows).
       Aligned with portfolIQ prompts/registry.yml.
-      is_enabled=false for halal_screening and reserved_* types.
+      is_enabled=false for reserved_* placeholder types.
       model_default and refresh_cadence are NULL for disabled types.
       Not financial advice. Methodology disclosed.
     config:
@@ -130,7 +130,7 @@ seeds:
       - name: is_enabled
         description: >
           True if this analysis type is active in production.
-          False for halal_screening (not in scope v1) and reserved_* placeholders.
+          False for reserved_* placeholders.
         tests:
           - not_null
 

@@ -10,7 +10,7 @@
 -- Tables: star_public.fact_onchain_advanced, star_public.fact_market_snapshot,
 --         star_public.dim_asset
 -- Filters: asset ticker = 'BTC' + date range last 90 days
--- Not financial advice. Not a fatwa. Methodology disclosed.
+-- Not financial advice. Methodology disclosed.
 -- ============================================================
 
 SELECT

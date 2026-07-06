@@ -8,7 +8,7 @@
 -- Suggested BI tool: Metabase (monitoring table with thresholds)
 -- Tables: star_public.dim_asset
 -- Filters: is_current = true + is_active implicit (valid_to IS NULL)
--- Not financial advice. Not a fatwa. Methodology disclosed.
+-- Not financial advice. Methodology disclosed.
 -- ============================================================
 
 SELECT

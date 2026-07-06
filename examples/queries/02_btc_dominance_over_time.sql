@@ -7,7 +7,7 @@
 -- Suggested BI tool: Power BI (line chart), Tableau
 -- Tables: star_public.fact_market_snapshot, star_public.dim_asset
 -- Filters: snapshot_date range last 90 days (prevents full scan)
--- Not financial advice. Not a fatwa. Methodology disclosed.
+-- Not financial advice. Methodology disclosed.
 -- ============================================================
 
 WITH daily_totals AS (

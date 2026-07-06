@@ -10,7 +10,7 @@
 -- Tables: star_public.fact_vwap_consensus, star_public.fact_market_snapshot,
 --         star_public.dim_asset
 -- Filters: asset ticker = 'BTC' + date range last 7 days + timeframe = '1d'
--- Not financial advice. Not a fatwa. Methodology disclosed.
+-- Not financial advice. Methodology disclosed.
 -- ============================================================
 
 -- Replace 'BTC' with any Tier 1 ticker available in fact_vwap_consensus.
