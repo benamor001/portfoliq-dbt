@@ -15,7 +15,13 @@ Format: [Semantic Versioning](https://semver.org/). Unreleased changes are stage
 
 ---
 
-## Unreleased
+## [0.2.1] — 2026-07-06
+
+### Fixed
+
+- Seed column type `double` → `double precision` (`double` is not a valid Postgres type —
+  `dbt seed` failed on vanilla Postgres/TimescaleDB installs).
+- CI matrix harness for the pack (structure/compilation validated on fresh DB).
 
 ### Changed — compliance scrub (D-166 / AMF-001)
 
